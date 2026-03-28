@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterState } from "@/pages/Dashboard";
 import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CompaniesTableProps {
   filters: FilterState;
