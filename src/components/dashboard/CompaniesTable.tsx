@@ -98,7 +98,11 @@ export const CompaniesTable = ({ filters }: CompaniesTableProps) => {
             ) : (
               companies.map((company) => (
                 <TableRow key={company.id}>
-                  <TableCell className="font-medium">{company.name}</TableCell>
+                  <TableCell>
+                    <Link to={`/company/${company.id}`} className="font-medium text-primary hover:underline">
+                      {company.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">{company.country}</Badge>
                   </TableCell>
