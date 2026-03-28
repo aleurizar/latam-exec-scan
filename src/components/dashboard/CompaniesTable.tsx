@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterState } from "@/pages/Dashboard";
 import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CompaniesTableProps {
   filters: FilterState;
@@ -97,7 +98,11 @@ export const CompaniesTable = ({ filters }: CompaniesTableProps) => {
             ) : (
               companies.map((company) => (
                 <TableRow key={company.id}>
-                  <TableCell className="font-medium">{company.name}</TableCell>
+                  <TableCell>
+                    <Link to={`/company/${company.id}`} className="font-medium text-primary hover:underline">
+                      {company.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">{company.country}</Badge>
                   </TableCell>

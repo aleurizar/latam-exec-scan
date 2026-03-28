@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterState } from "@/pages/Dashboard";
 import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ExecutivesTableProps {
   filters: FilterState;
@@ -94,7 +95,11 @@ export const ExecutivesTable = ({ filters }: ExecutivesTableProps) => {
             ) : (
               executives.map((exec) => (
                 <TableRow key={exec.id}>
-                  <TableCell className="font-medium">{exec.full_name}</TableCell>
+                  <TableCell>
+                    <Link to={`/executive/${exec.id}`} className="font-medium text-primary hover:underline">
+                      {exec.full_name}
+                    </Link>
+                  </TableCell>
                   <TableCell>{exec.position}</TableCell>
                   <TableCell>
                     {exec.companies ? (
