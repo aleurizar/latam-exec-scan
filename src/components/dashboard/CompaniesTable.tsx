@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterState } from "@/pages/Dashboard";
 import { ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
 
 interface CompaniesTableProps {
   filters: FilterState;
+  onSelectCompany?: (id: string) => void;
 }
 
 interface Company {
@@ -22,7 +22,7 @@ interface Company {
   website: string | null;
 }
 
-export const CompaniesTable = ({ filters }: CompaniesTableProps) => {
+export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,26 +34,13 @@ export const CompaniesTable = ({ filters }: CompaniesTableProps) => {
     setLoading(true);
     let query = supabase.from("companies").select("*").order("name");
 
-    if (filters.country.length > 0) {
-      query = query.in("country", filters.country);
-    }
-    if (filters.industry.length > 0) {
-      query = query.in("industry", filters.industry);
-    }
-    if (filters.size.length > 0) {
-      query = query.in("size", filters.size);
-    }
-    if (filters.search) {
-      query = query.ilike("name", `%${filters.search}%`);
-    }
+    if (filters.country.length > 0) query = query.in("country", filters.country);
+    if (filters.industry.length > 0) query = query.in("industry", filters.industry);
+    if (filters.size.length > 0) query = query.in("size", filters.size);
+    if (filters.search) query = query.ilike("name", `%${filters.search}%`);
 
     const { data, error } = await query.limit(100);
-
-    if (error) {
-      console.error("Error fetching companies:", error);
-    } else {
-      setCompanies(data || []);
-    }
+    if (!error) setCompanies(data || []);
     setLoading(false);
   };
 
@@ -66,9 +53,7 @@ export const CompaniesTable = ({ filters }: CompaniesTableProps) => {
     return (
       <Card>
         <div className="p-6 space-y-4">
-          {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       </Card>
     );
@@ -97,32 +82,22 @@ export const CompaniesTable = ({ filters }: CompaniesTableProps) => {
               </TableRow>
             ) : (
               companies.map((company) => (
-                <TableRow key={company.id}>
+                <TableRow key={company.id} className="cursor-pointer" onClick={() => onSelectCompany?.(company.id)}>
                   <TableCell>
-                    <Link to={`/company/${company.id}`} className="font-medium text-primary hover:underline">
+                    <span className="font-medium text-primary hover:underline cursor-pointer">
                       {company.name}
-                    </Link>
+                    </span>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{company.country}</Badge>
-                  </TableCell>
+                  <TableCell><Badge variant="outline">{company.country}</Badge></TableCell>
                   <TableCell>{company.industry}</TableCell>
                   <TableCell>{company.size || "N/A"}</TableCell>
                   <TableCell>{formatRevenue(company.revenue_usd)}</TableCell>
                   <TableCell>
                     {company.website ? (
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline inline-flex items-center gap-1"
-                      >
-                        Visit
-                        <ExternalLink className="w-3 h-3" />
+                      <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        Visit <ExternalLink className="w-3 h-3" />
                       </a>
-                    ) : (
-                      <span className="text-muted-foreground">N/A</span>
-                    )}
+                    ) : <span className="text-muted-foreground">N/A</span>}
                   </TableCell>
                 </TableRow>
               ))

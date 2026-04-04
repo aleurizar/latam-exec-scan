@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import { Button } from "@/components/ui/button";
-import { Database, LogOut, Download, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { CompaniesTable } from "@/components/dashboard/CompaniesTable";
 import { ExecutivesTable } from "@/components/dashboard/ExecutivesTable";
 import { DataFilters } from "@/components/dashboard/DataFilters";
 import { ExportDialog } from "@/components/dashboard/ExportDialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
+import { DetailPanel } from "@/components/dashboard/DetailPanel";
+import { DashboardHome } from "@/components/dashboard/DashboardHome";
 
 export interface FilterState {
   country: string[];
@@ -24,29 +24,27 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showExport, setShowExport] = useState(false);
-  const [activeTab, setActiveTab] = useState("companies");
+  const [activeView, setActiveView] = useState<SidebarView>("home");
   const [filters, setFilters] = useState<FilterState>({
     country: [],
     industry: [],
     size: [],
-    search: ""
+    search: "",
   });
+  const [detailType, setDetailType] = useState<"company" | "executive" | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-      }
+      if (!session) navigate("/auth");
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-      }
+      if (!session) navigate("/auth");
     });
 
     return () => subscription.unsubscribe();
@@ -54,85 +52,76 @@ const Dashboard = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast.success("Signed out successfully");
+    toast.success("Sesión cerrada");
   };
 
-  if (!session || !user) {
-    return null;
-  }
+  const openDetail = (type: "company" | "executive", id: string) => {
+    setDetailType(type);
+    setDetailId(id);
+  };
+
+  const closeDetail = () => {
+    setDetailType(null);
+    setDetailId(null);
+  };
+
+  if (!session || !user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Database className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">LATAM Business Data</h1>
-              <p className="text-sm text-muted-foreground">Executive Database Platform</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden md:inline">
-              {user.email}
-            </span>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="flex h-screen overflow-hidden bg-background">
+      <AppSidebar
+        activeView={activeView}
+        onViewChange={(v) => { setActiveView(v); closeDetail(); }}
+        onExport={() => setShowExport(true)}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onSignOut={handleSignOut}
+      />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="border-b bg-card px-6 py-3 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-2xl font-bold mb-1">Data Explorer</h2>
-            <p className="text-muted-foreground">Search and export company and executive data</p>
+            <h1 className="text-lg font-bold text-foreground">LATAM Business Data</h1>
+            <p className="text-xs text-muted-foreground">Executive Database Platform</p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
-            </Button>
-            <Button onClick={() => setShowExport(true)}>
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </div>
+          <span className="text-sm text-muted-foreground">{user.email}</span>
+        </header>
+
+        <div className="flex-1 overflow-y-auto">
+          {activeView === "home" && <DashboardHome />}
+
+          {activeView === "companies" && (
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4 text-foreground">Empresas</h2>
+              {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
+              <CompaniesTable filters={filters} onSelectCompany={(id) => openDetail("company", id)} />
+            </div>
+          )}
+
+          {activeView === "executives" && (
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4 text-foreground">Ejecutivos</h2>
+              {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
+              <ExecutivesTable filters={filters} onSelectExecutive={(id) => openDetail("executive", id)} />
+            </div>
+          )}
         </div>
+      </div>
 
-        {showFilters && (
-          <DataFilters filters={filters} onFiltersChange={setFilters} />
-        )}
+      {/* Detail panel on the right */}
+      <DetailPanel
+        type={detailType}
+        id={detailId}
+        onClose={closeDetail}
+        onNavigate={openDetail}
+      />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList>
-            <TabsTrigger value="companies">Companies</TabsTrigger>
-            <TabsTrigger value="executives">Executives</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="companies" className="mt-6">
-            <CompaniesTable filters={filters} />
-          </TabsContent>
-
-          <TabsContent value="executives" className="mt-6">
-            <ExecutivesTable filters={filters} />
-          </TabsContent>
-        </Tabs>
-
-        <ExportDialog
-          open={showExport}
-          onOpenChange={setShowExport}
-          dataType={activeTab}
-          filters={filters}
-        />
-      </main>
+      <ExportDialog
+        open={showExport}
+        onOpenChange={setShowExport}
+        dataType={activeView === "executives" ? "executives" : "companies"}
+        filters={filters}
+      />
     </div>
   );
 };
