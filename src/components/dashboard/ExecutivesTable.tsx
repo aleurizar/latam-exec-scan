@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterState } from "@/pages/Dashboard";
 import { ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
 
 interface ExecutivesTableProps {
   filters: FilterState;
+  onSelectExecutive?: (id: string) => void;
 }
 
 interface Executive {
@@ -21,13 +21,10 @@ interface Executive {
   linkedin_url: string | null;
   country: string;
   technologies: string[] | null;
-  companies: {
-    name: string;
-    industry: string;
-  } | null;
+  companies: { name: string; industry: string } | null;
 }
 
-export const ExecutivesTable = ({ filters }: ExecutivesTableProps) => {
+export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableProps) => {
   const [executives, setExecutives] = useState<Executive[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,25 +34,13 @@ export const ExecutivesTable = ({ filters }: ExecutivesTableProps) => {
 
   const fetchExecutives = async () => {
     setLoading(true);
-    let query = supabase
-      .from("executives")
-      .select("*, companies(name, industry)")
-      .order("full_name");
+    let query = supabase.from("executives").select("*, companies(name, industry)").order("full_name");
 
-    if (filters.country.length > 0) {
-      query = query.in("country", filters.country);
-    }
-    if (filters.search) {
-      query = query.or(`full_name.ilike.%${filters.search}%,position.ilike.%${filters.search}%`);
-    }
+    if (filters.country.length > 0) query = query.in("country", filters.country);
+    if (filters.search) query = query.or(`full_name.ilike.%${filters.search}%,position.ilike.%${filters.search}%`);
 
     const { data, error } = await query.limit(100);
-
-    if (error) {
-      console.error("Error fetching executives:", error);
-    } else {
-      setExecutives(data || []);
-    }
+    if (!error) setExecutives(data || []);
     setLoading(false);
   };
 
@@ -63,9 +48,7 @@ export const ExecutivesTable = ({ filters }: ExecutivesTableProps) => {
     return (
       <Card>
         <div className="p-6 space-y-4">
-          {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       </Card>
     );
@@ -94,11 +77,11 @@ export const ExecutivesTable = ({ filters }: ExecutivesTableProps) => {
               </TableRow>
             ) : (
               executives.map((exec) => (
-                <TableRow key={exec.id}>
+                <TableRow key={exec.id} className="cursor-pointer" onClick={() => onSelectExecutive?.(exec.id)}>
                   <TableCell>
-                    <Link to={`/executive/${exec.id}`} className="font-medium text-primary hover:underline">
+                    <span className="font-medium text-primary hover:underline cursor-pointer">
                       {exec.full_name}
-                    </Link>
+                    </span>
                   </TableCell>
                   <TableCell>{exec.position}</TableCell>
                   <TableCell>
@@ -107,28 +90,16 @@ export const ExecutivesTable = ({ filters }: ExecutivesTableProps) => {
                         <div className="font-medium">{exec.companies.name}</div>
                         <div className="text-sm text-muted-foreground">{exec.companies.industry}</div>
                       </div>
-                    ) : (
-                      "N/A"
-                    )}
+                    ) : "N/A"}
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{exec.country}</Badge>
-                  </TableCell>
+                  <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                   <TableCell>{exec.seniority || "N/A"}</TableCell>
                   <TableCell>
                     {exec.linkedin_url ? (
-                      <a
-                        href={exec.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline inline-flex items-center gap-1"
-                      >
-                        Profile
-                        <ExternalLink className="w-3 h-3" />
+                      <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        Profile <ExternalLink className="w-3 h-3" />
                       </a>
-                    ) : (
-                      <span className="text-muted-foreground">N/A</span>
-                    )}
+                    ) : <span className="text-muted-foreground">N/A</span>}
                   </TableCell>
                 </TableRow>
               ))
