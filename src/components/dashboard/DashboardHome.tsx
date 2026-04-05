@@ -15,6 +15,10 @@ interface Stats {
   industries: number;
 }
 
+interface DashboardHomeProps {
+  onNavigate?: (view: "companies" | "executives", filter?: { key: string; value: string }) => void;
+}
+
 const CHART_COLORS = [
   "hsl(214, 85%, 45%)",
   "hsl(200, 95%, 48%)",
@@ -26,7 +30,7 @@ const CHART_COLORS = [
   "hsl(50, 80%, 50%)",
 ];
 
-export const DashboardHome = () => {
+export const DashboardHome = ({ onNavigate }: DashboardHomeProps) => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [topCountries, setTopCountries] = useState<{ name: string; count: number }[]>([]);
@@ -93,11 +97,24 @@ export const DashboardHome = () => {
   }
 
   const statCards = [
-    { icon: Building2, label: "Empresas", value: stats?.totalCompanies || 0, color: "text-primary" },
-    { icon: Users, label: "Ejecutivos", value: stats?.totalExecutives || 0, color: "text-accent" },
-    { icon: Globe, label: "Países", value: stats?.countries || 0, color: "text-primary" },
-    { icon: TrendingUp, label: "Industrias", value: stats?.industries || 0, color: "text-accent" },
+    { icon: Building2, label: "Empresas", value: stats?.totalCompanies || 0, color: "text-primary", view: "companies" as const },
+    { icon: Users, label: "Ejecutivos", value: stats?.totalExecutives || 0, color: "text-accent", view: "executives" as const },
+    { icon: Globe, label: "Países", value: stats?.countries || 0, color: "text-primary", view: "companies" as const },
+    { icon: TrendingUp, label: "Industrias", value: stats?.industries || 0, color: "text-accent", view: "companies" as const },
   ];
+
+  const handleBarClick = (data: any) => {
+    if (data?.name && onNavigate) {
+      onNavigate("companies", { key: "country", value: data.name });
+    }
+  };
+
+  const handlePieClick = (_: any, index: number) => {
+    const industry = topIndustries[index];
+    if (industry && onNavigate) {
+      onNavigate("companies", { key: "industry", value: industry.name });
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -108,7 +125,11 @@ export const DashboardHome = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((stat) => (
-          <Card key={stat.label}>
+          <Card
+            key={stat.label}
+            className="cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all"
+            onClick={() => onNavigate?.(stat.view)}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <stat.icon className={`w-8 h-8 ${stat.color}`} />
@@ -123,7 +144,6 @@ export const DashboardHome = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Bar chart - Countries */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Empresas por País</CardTitle>
@@ -133,28 +153,13 @@ export const DashboardHome = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topCountries} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
-                  />
-                  <YAxis
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
-                    allowDecimals={false}
-                  />
+                  <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "hsl(var(--border))" }} />
+                  <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "hsl(var(--border))" }} allowDecimals={false} />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      color: "hsl(var(--foreground))",
-                    }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
                     formatter={(value: number) => [value, "Empresas"]}
                   />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} className="cursor-pointer" onClick={handleBarClick}>
                     {topCountries.map((_, index) => (
                       <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
@@ -165,7 +170,6 @@ export const DashboardHome = () => {
           </CardContent>
         </Card>
 
-        {/* Pie chart - Industries */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Distribución por Industria</CardTitle>
@@ -183,6 +187,8 @@ export const DashboardHome = () => {
                     outerRadius={90}
                     innerRadius={45}
                     paddingAngle={2}
+                    className="cursor-pointer"
+                    onClick={handlePieClick}
                     label={({ name, percent }) =>
                       `${name.length > 12 ? name.slice(0, 12) + "…" : name} ${(percent * 100).toFixed(0)}%`
                     }
@@ -193,17 +199,10 @@ export const DashboardHome = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      color: "hsl(var(--foreground))",
-                    }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
                     formatter={(value: number) => [value, "Empresas"]}
                   />
-                  <Legend
-                    wrapperStyle={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}
-                  />
+                  <Legend wrapperStyle={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

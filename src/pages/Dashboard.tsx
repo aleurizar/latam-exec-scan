@@ -10,6 +10,7 @@ import { ExportDialog } from "@/components/dashboard/ExportDialog";
 import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
 import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
+import { ListsView } from "@/components/dashboard/ListsView";
 
 export interface FilterState {
   country: string[];
@@ -65,6 +66,20 @@ const Dashboard = () => {
     setDetailId(null);
   };
 
+  const handleDashboardNavigate = (view: "companies" | "executives", filter?: { key: string; value: string }) => {
+    if (filter) {
+      setFilters({
+        country: filter.key === "country" ? [filter.value] : [],
+        industry: filter.key === "industry" ? [filter.value] : [],
+        size: [],
+        search: "",
+      });
+      setShowFilters(true);
+    }
+    setActiveView(view);
+    closeDetail();
+  };
+
   if (!session || !user) return null;
 
   return (
@@ -77,7 +92,6 @@ const Dashboard = () => {
         onSignOut={handleSignOut}
       />
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="border-b bg-card px-6 py-3 flex items-center justify-between shrink-0">
           <div>
@@ -88,7 +102,7 @@ const Dashboard = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          {activeView === "home" && <DashboardHome />}
+          {activeView === "home" && <DashboardHome onNavigate={handleDashboardNavigate} />}
 
           {activeView === "companies" && (
             <div className="p-6">
@@ -105,10 +119,13 @@ const Dashboard = () => {
               <ExecutivesTable filters={filters} onSelectExecutive={(id) => openDetail("executive", id)} />
             </div>
           )}
+
+          {activeView === "lists" && (
+            <ListsView onSelectItem={(type, id) => openDetail(type, id)} />
+          )}
         </div>
       </div>
 
-      {/* Detail panel on the right */}
       <DetailPanel
         type={detailType}
         id={detailId}
