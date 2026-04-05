@@ -7,10 +7,11 @@ import {
   Filter,
   LogOut,
   Database,
+  List,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SidebarView = "home" | "companies" | "executives";
+export type SidebarView = "home" | "companies" | "executives" | "lists";
 
 interface AppSidebarProps {
   activeView: SidebarView;
@@ -65,6 +66,17 @@ export const AppSidebar = ({
       ],
     },
     {
+      icon: List,
+      label: "Listas",
+      action: () => onViewChange("lists"),
+      active: activeView === "lists",
+      submenu: [
+        { label: "Ver Listas", action: () => onViewChange("lists") },
+        { label: "Empresas", action: () => onViewChange("companies") },
+        { label: "Ejecutivos", action: () => onViewChange("executives") },
+      ],
+    },
+    {
       icon: Filter,
       label: "Filtros",
       action: onToggleFilters,
@@ -78,12 +90,10 @@ export const AppSidebar = ({
 
   return (
     <div className="h-screen w-16 bg-foreground flex flex-col items-center py-4 gap-1 shrink-0 z-50">
-      {/* Logo */}
       <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center mb-6">
         <Database className="w-5 h-5 text-primary-foreground" />
       </div>
 
-      {/* Navigation items */}
       <div className="flex-1 flex flex-col gap-1 w-full">
         {items.map((item, index) => (
           <div
@@ -104,7 +114,6 @@ export const AppSidebar = ({
               <item.icon className="w-5 h-5" />
             </button>
 
-            {/* Hover tooltip / submenu */}
             {hoveredItem === index && (
               <div className="absolute left-full top-0 ml-1 z-50">
                 <div className="bg-card border border-border rounded-lg shadow-lg py-2 min-w-[160px]">
@@ -136,7 +145,6 @@ export const AppSidebar = ({
         ))}
       </div>
 
-      {/* Sign out */}
       <div
         className="relative w-full"
         onMouseEnter={() => setHoveredItem(99)}
