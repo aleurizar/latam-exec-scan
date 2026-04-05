@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterState } from "@/pages/Dashboard";
 import { ExternalLink } from "lucide-react";
+import { TablePagination } from "./TablePagination";
 
 interface CompaniesTableProps {
   filters: FilterState;
@@ -25,22 +26,35 @@ interface Company {
 export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    setPage(0);
+  }, [filters]);
 
   useEffect(() => {
     fetchCompanies();
-  }, [filters]);
+  }, [filters, page, pageSize]);
 
   const fetchCompanies = async () => {
     setLoading(true);
-    let query = supabase.from("companies").select("*").order("name");
+    let query = supabase.from("companies").select("*", { count: "exact" }).order("name");
 
     if (filters.country.length > 0) query = query.in("country", filters.country);
     if (filters.industry.length > 0) query = query.in("industry", filters.industry);
     if (filters.size.length > 0) query = query.in("size", filters.size);
     if (filters.search) query = query.ilike("name", `%${filters.search}%`);
 
-    const { data, error } = await query.limit(100);
-    if (!error) setCompanies(data || []);
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error, count } = await query.range(from, to);
+
+    if (!error) {
+      setCompanies(data || []);
+      setTotalCount(count || 0);
+    }
     setLoading(false);
   };
 
@@ -105,6 +119,13 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
           </TableBody>
         </Table>
       </div>
+      <TablePagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
     </Card>
   );
 };
