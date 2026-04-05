@@ -3,6 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, Globe, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 interface Stats {
   totalCompanies: number;
@@ -11,11 +15,22 @@ interface Stats {
   industries: number;
 }
 
+const CHART_COLORS = [
+  "hsl(214, 85%, 45%)",
+  "hsl(200, 95%, 48%)",
+  "hsl(150, 60%, 45%)",
+  "hsl(35, 90%, 55%)",
+  "hsl(340, 70%, 55%)",
+  "hsl(270, 60%, 55%)",
+  "hsl(180, 50%, 45%)",
+  "hsl(50, 80%, 50%)",
+];
+
 export const DashboardHome = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [topCountries, setTopCountries] = useState<{ country: string; count: number }[]>([]);
-  const [topIndustries, setTopIndustries] = useState<{ industry: string; count: number }[]>([]);
+  const [topCountries, setTopCountries] = useState<{ name: string; count: number }[]>([]);
+  const [topIndustries, setTopIndustries] = useState<{ name: string; count: number }[]>([]);
 
   useEffect(() => {
     fetchStats();
@@ -31,25 +46,23 @@ export const DashboardHome = () => {
     const countries = [...new Set(companies.map((c) => c.country))];
     const industries = [...new Set(companies.map((c) => c.industry))];
 
-    // Count by country
     const countryMap: Record<string, number> = {};
     companies.forEach((c) => {
       countryMap[c.country] = (countryMap[c.country] || 0) + 1;
     });
     const sortedCountries = Object.entries(countryMap)
-      .map(([country, count]) => ({ country, count }))
+      .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .slice(0, 8);
 
-    // Count by industry
     const industryMap: Record<string, number> = {};
     companies.forEach((c) => {
       industryMap[c.industry] = (industryMap[c.industry] || 0) + 1;
     });
     const sortedIndustries = Object.entries(industryMap)
-      .map(([industry, count]) => ({ industry, count }))
+      .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .slice(0, 8);
 
     setStats({
       totalCompanies: companies.length,
@@ -71,6 +84,10 @@ export const DashboardHome = () => {
             <Skeleton key={i} className="h-28" />
           ))}
         </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Skeleton className="h-80" />
+          <Skeleton className="h-80" />
+        </div>
       </div>
     );
   }
@@ -78,8 +95,8 @@ export const DashboardHome = () => {
   const statCards = [
     { icon: Building2, label: "Empresas", value: stats?.totalCompanies || 0, color: "text-primary" },
     { icon: Users, label: "Ejecutivos", value: stats?.totalExecutives || 0, color: "text-accent" },
-    { icon: Globe, label: "Países", value: stats?.countries || 0, color: "text-data-green" },
-    { icon: TrendingUp, label: "Industrias", value: stats?.industries || 0, color: "text-data-orange" },
+    { icon: Globe, label: "Países", value: stats?.countries || 0, color: "text-primary" },
+    { icon: TrendingUp, label: "Industrias", value: stats?.industries || 0, color: "text-accent" },
   ];
 
   return (
@@ -106,50 +123,89 @@ export const DashboardHome = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
+        {/* Bar chart - Countries */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top Países</CardTitle>
+            <CardTitle className="text-base">Empresas por País</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {topCountries.map((item) => (
-                <div key={item.country} className="flex items-center justify-between">
-                  <span className="text-sm text-foreground">{item.country}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full"
-                        style={{ width: `${(item.count / (topCountries[0]?.count || 1)) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground w-6 text-right">{item.count}</span>
-                  </div>
-                </div>
-              ))}
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topCountries} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={{ stroke: "hsl(var(--border))" }}
+                  />
+                  <YAxis
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      color: "hsl(var(--foreground))",
+                    }}
+                    formatter={(value: number) => [value, "Empresas"]}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {topCountries.map((_, index) => (
+                      <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
+        {/* Pie chart - Industries */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top Industrias</CardTitle>
+            <CardTitle className="text-base">Distribución por Industria</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {topIndustries.map((item) => (
-                <div key={item.industry} className="flex items-center justify-between">
-                  <span className="text-sm text-foreground">{item.industry}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-accent rounded-full"
-                        style={{ width: `${(item.count / (topIndustries[0]?.count || 1)) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground w-6 text-right">{item.count}</span>
-                  </div>
-                </div>
-              ))}
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={topIndustries}
+                    dataKey="count"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    innerRadius={45}
+                    paddingAngle={2}
+                    label={({ name, percent }) =>
+                      `${name.length > 12 ? name.slice(0, 12) + "…" : name} ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelLine={{ stroke: "hsl(var(--muted-foreground))" }}
+                  >
+                    {topIndustries.map((_, index) => (
+                      <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      color: "hsl(var(--foreground))",
+                    }}
+                    formatter={(value: number) => [value, "Empresas"]}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
