@@ -55,6 +55,7 @@ interface CompanyExecutive {
 export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps) => {
   const [company, setCompany] = useState<Company | null>(null);
   const [executive, setExecutive] = useState<Executive | null>(null);
+  const { canViewContactInfo } = useUserPlan();
   const [companyExecs, setCompanyExecs] = useState<CompanyExecutive[]>([]);
   const [loading, setLoading] = useState(false);
 
