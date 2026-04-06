@@ -197,18 +197,27 @@ export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps)
                   <Briefcase className="w-4 h-4 text-muted-foreground" />
                   <Badge variant="secondary">{executive.seniority || "N/A"}</Badge>
                 </div>
-                {executive.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <a href={`mailto:${executive.email}`} className="text-primary hover:underline">{executive.email}</a>
-                  </div>
-                )}
-                {executive.linkedin_url && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Linkedin className="w-4 h-4 text-muted-foreground" />
-                    <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                      Ver perfil <ExternalLink className="w-3 h-3" />
-                    </a>
+                {canViewContactInfo ? (
+                  <>
+                    {executive.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <a href={`mailto:${executive.email}`} className="text-primary hover:underline">{executive.email}</a>
+                      </div>
+                    )}
+                    {executive.linkedin_url && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Linkedin className="w-4 h-4 text-muted-foreground" />
+                        <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                          Ver perfil <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Lock className="w-4 h-4" />
+                    <span>Actualiza a Pro para ver contacto</span>
                   </div>
                 )}
               </div>

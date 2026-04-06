@@ -146,11 +146,15 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                     <TableCell>{exec.seniority || "N/A"}</TableCell>
                     <TableCell>
-                      {exec.linkedin_url ? (
-                        <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          Profile <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : <span className="text-muted-foreground">N/A</span>}
+                      {canViewContactInfo ? (
+                        exec.linkedin_url ? (
+                          <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            Profile <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : <span className="text-muted-foreground">N/A</span>
+                      ) : (
+                        <span className="text-muted-foreground inline-flex items-center gap-1"><Lock className="w-3 h-3" /> Pro</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
