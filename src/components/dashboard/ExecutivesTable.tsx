@@ -7,9 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterState } from "@/pages/Dashboard";
-import { ExternalLink, ListPlus } from "lucide-react";
+import { ExternalLink, ListPlus, Lock } from "lucide-react";
 import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface ExecutivesTableProps {
   filters: FilterState;
