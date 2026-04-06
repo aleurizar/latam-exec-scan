@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Building2, Globe, MapPin, Users, DollarSign, ExternalLink, User, Briefcase, Mail, Linkedin, Cpu } from "lucide-react";
+import { X, Building2, Globe, MapPin, Users, DollarSign, ExternalLink, User, Briefcase, Mail, Linkedin, Cpu, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface DetailPanelProps {
   type: "company" | "executive" | null;
