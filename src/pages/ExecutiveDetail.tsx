@@ -31,6 +31,7 @@ const ExecutiveDetail = () => {
   const navigate = useNavigate();
   const [executive, setExecutive] = useState<Executive | null>(null);
   const [loading, setLoading] = useState(true);
+  const { canViewContactInfo } = useUserPlan();
 
   useEffect(() => {
     if (id) fetchExecutive();
