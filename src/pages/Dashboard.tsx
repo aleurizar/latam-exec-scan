@@ -81,6 +81,12 @@ const Dashboard = () => {
     closeDetail();
   };
 
+  const debouncedSearch = useDebounce(filters.search, 300);
+  const debouncedFilters = useMemo(
+    () => ({ ...filters, search: debouncedSearch }),
+    [filters.country, filters.industry, filters.size, debouncedSearch]
+  );
+
   if (!session || !user) return null;
 
   return (
