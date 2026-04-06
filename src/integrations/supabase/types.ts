@@ -334,9 +334,59 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      executives_safe: {
+        Row: {
+          company_id: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          linkedin_url: string | null
+          position: string | null
+          seniority: string | null
+          technologies: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: never
+          full_name?: string | null
+          id?: string | null
+          linkedin_url?: never
+          position?: string | null
+          seniority?: string | null
+          technologies?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: never
+          full_name?: string | null
+          id?: string | null
+          linkedin_url?: never
+          position?: string | null
+          seniority?: string | null
+          technologies?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "executives_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      get_user_plan: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
