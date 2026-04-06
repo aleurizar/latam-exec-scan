@@ -115,7 +115,7 @@ const Dashboard = () => {
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4 text-foreground">Empresas</h2>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
-              <CompaniesTable filters={filters} onSelectCompany={(id) => openDetail("company", id)} />
+              <CompaniesTable filters={debouncedFilters} onSelectCompany={(id) => openDetail("company", id)} />
             </div>
           )}
 
@@ -123,7 +123,7 @@ const Dashboard = () => {
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4 text-foreground">Ejecutivos</h2>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
-              <ExecutivesTable filters={filters} onSelectExecutive={(id) => openDetail("executive", id)} />
+              <ExecutivesTable filters={debouncedFilters} onSelectExecutive={(id) => openDetail("executive", id)} />
             </div>
           )}
 
