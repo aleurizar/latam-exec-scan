@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -80,6 +81,12 @@ const Dashboard = () => {
     closeDetail();
   };
 
+  const debouncedSearch = useDebounce(filters.search, 300);
+  const debouncedFilters = useMemo(
+    () => ({ ...filters, search: debouncedSearch }),
+    [filters.country, filters.industry, filters.size, debouncedSearch]
+  );
+
   if (!session || !user) return null;
 
   return (
@@ -108,7 +115,7 @@ const Dashboard = () => {
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4 text-foreground">Empresas</h2>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
-              <CompaniesTable filters={filters} onSelectCompany={(id) => openDetail("company", id)} />
+              <CompaniesTable filters={debouncedFilters} onSelectCompany={(id) => openDetail("company", id)} />
             </div>
           )}
 
@@ -116,7 +123,7 @@ const Dashboard = () => {
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4 text-foreground">Ejecutivos</h2>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
-              <ExecutivesTable filters={filters} onSelectExecutive={(id) => openDetail("executive", id)} />
+              <ExecutivesTable filters={debouncedFilters} onSelectExecutive={(id) => openDetail("executive", id)} />
             </div>
           )}
 
