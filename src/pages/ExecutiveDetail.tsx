@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, User, Briefcase, MapPin, Mail, Linkedin, Building2, ExternalLink, Cpu } from "lucide-react";
+import { ArrowLeft, User, Briefcase, MapPin, Mail, Linkedin, Building2, ExternalLink, Cpu, Lock } from "lucide-react";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface Executive {
   id: string;
