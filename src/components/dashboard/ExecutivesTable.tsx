@@ -32,6 +32,7 @@ interface Executive {
 export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableProps) => {
   const [executives, setExecutives] = useState<Executive[]>([]);
   const [loading, setLoading] = useState(true);
+  const { canViewContactInfo } = useUserPlan();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
