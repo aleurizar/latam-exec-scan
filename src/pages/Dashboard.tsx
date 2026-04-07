@@ -29,6 +29,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [activeView, setActiveView] = useState<SidebarView>("home");
   const [filters, setFilters] = useState<FilterState>({
     country: [],
