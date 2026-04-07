@@ -36,6 +36,7 @@ export const AppSidebar = ({
   onViewChange,
   onExport,
   onToggleFilters,
+  onImport,
   onSignOut,
 }: AppSidebarProps) => {
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
