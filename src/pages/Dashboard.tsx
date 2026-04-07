@@ -9,7 +9,7 @@ import { ExecutivesTable } from "@/components/dashboard/ExecutivesTable";
 import { DataFilters } from "@/components/dashboard/DataFilters";
 import { ExportDialog } from "@/components/dashboard/ExportDialog";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
 import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
@@ -123,8 +123,16 @@ const Dashboard = () => {
                     placeholder="Buscar empresas..."
                     value={filters.search}
                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    className="pl-9"
+                    className="pl-9 pr-9"
                   />
+                  {filters.search && (
+                    <button
+                      onClick={() => setFilters({ ...filters, search: "" })}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
@@ -142,8 +150,16 @@ const Dashboard = () => {
                     placeholder="Buscar ejecutivos..."
                     value={filters.search}
                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    className="pl-9"
+                    className="pl-9 pr-9"
                   />
+                  {filters.search && (
+                    <button
+                      onClick={() => setFilters({ ...filters, search: "" })}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
