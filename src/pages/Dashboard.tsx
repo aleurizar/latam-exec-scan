@@ -189,6 +189,11 @@ const Dashboard = () => {
         dataType={activeView === "executives" ? "executives" : "companies"}
         filters={filters}
       />
+
+      <ImportDialog
+        open={showImport}
+        onOpenChange={setShowImport}
+      />
     </div>
   );
 };
