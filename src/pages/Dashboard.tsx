@@ -115,7 +115,18 @@ const Dashboard = () => {
 
           {activeView === "companies" && (
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4 text-foreground">Empresas</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">Empresas</h2>
+                <div className="relative w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar empresas..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
               <CompaniesTable filters={debouncedFilters} onSelectCompany={(id) => openDetail("company", id)} />
             </div>
@@ -123,7 +134,18 @@ const Dashboard = () => {
 
           {activeView === "executives" && (
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4 text-foreground">Ejecutivos</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">Ejecutivos</h2>
+                <div className="relative w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar ejecutivos..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
               {showFilters && <DataFilters filters={filters} onFiltersChange={setFilters} />}
               <ExecutivesTable filters={debouncedFilters} onSelectExecutive={(id) => openDetail("executive", id)} />
             </div>
