@@ -33,15 +33,6 @@ export const DataFilters = ({ filters, onFiltersChange }: DataFiltersProps) => {
     <Card className="mb-6">
       <CardContent className="pt-6 space-y-4">
         <div>
-          <Label className="mb-2 block">Search</Label>
-          <Input
-            placeholder="Search companies or executives..."
-            value={filters.search}
-            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-          />
-        </div>
-
-        <div>
           <Label className="mb-2 block">Country</Label>
           <div className="flex flex-wrap gap-2">
             {COUNTRIES.map(country => (
