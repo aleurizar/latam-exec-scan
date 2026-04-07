@@ -8,6 +8,7 @@ import { CompaniesTable } from "@/components/dashboard/CompaniesTable";
 import { ExecutivesTable } from "@/components/dashboard/ExecutivesTable";
 import { DataFilters } from "@/components/dashboard/DataFilters";
 import { ExportDialog } from "@/components/dashboard/ExportDialog";
+import { ImportDialog } from "@/components/dashboard/ImportDialog";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
