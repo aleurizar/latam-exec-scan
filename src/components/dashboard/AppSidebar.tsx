@@ -8,6 +8,7 @@ import {
   LogOut,
   Database,
   List,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
