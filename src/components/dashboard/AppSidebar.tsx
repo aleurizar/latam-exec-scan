@@ -19,6 +19,7 @@ interface AppSidebarProps {
   onViewChange: (view: SidebarView) => void;
   onExport: () => void;
   onToggleFilters: () => void;
+  onImport: () => void;
   onSignOut: () => void;
 }
 
