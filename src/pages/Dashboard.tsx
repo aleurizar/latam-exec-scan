@@ -9,7 +9,7 @@ import { ExecutivesTable } from "@/components/dashboard/ExecutivesTable";
 import { DataFilters } from "@/components/dashboard/DataFilters";
 import { ExportDialog } from "@/components/dashboard/ExportDialog";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
 import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
