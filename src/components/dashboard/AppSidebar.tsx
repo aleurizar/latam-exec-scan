@@ -8,6 +8,7 @@ import {
   LogOut,
   Database,
   List,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ interface AppSidebarProps {
   onViewChange: (view: SidebarView) => void;
   onExport: () => void;
   onToggleFilters: () => void;
+  onImport: () => void;
   onSignOut: () => void;
 }
 
@@ -34,6 +36,7 @@ export const AppSidebar = ({
   onViewChange,
   onExport,
   onToggleFilters,
+  onImport,
   onSignOut,
 }: AppSidebarProps) => {
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
@@ -80,6 +83,11 @@ export const AppSidebar = ({
       icon: Filter,
       label: "Filtros",
       action: onToggleFilters,
+    },
+    {
+      icon: Upload,
+      label: "Importar",
+      action: onImport,
     },
     {
       icon: Download,

@@ -8,6 +8,7 @@ import { CompaniesTable } from "@/components/dashboard/CompaniesTable";
 import { ExecutivesTable } from "@/components/dashboard/ExecutivesTable";
 import { DataFilters } from "@/components/dashboard/DataFilters";
 import { ExportDialog } from "@/components/dashboard/ExportDialog";
+import { ImportDialog } from "@/components/dashboard/ImportDialog";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [activeView, setActiveView] = useState<SidebarView>("home");
   const [filters, setFilters] = useState<FilterState>({
     country: [],
@@ -98,6 +100,7 @@ const Dashboard = () => {
         onViewChange={(v) => { setActiveView(v); closeDetail(); }}
         onExport={() => setShowExport(true)}
         onToggleFilters={() => setShowFilters(!showFilters)}
+        onImport={() => setShowImport(true)}
         onSignOut={handleSignOut}
       />
 
@@ -185,6 +188,11 @@ const Dashboard = () => {
         onOpenChange={setShowExport}
         dataType={activeView === "executives" ? "executives" : "companies"}
         filters={filters}
+      />
+
+      <ImportDialog
+        open={showImport}
+        onOpenChange={setShowImport}
       />
     </div>
   );
