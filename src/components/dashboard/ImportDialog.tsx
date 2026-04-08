@@ -402,7 +402,7 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
                   </p>
                 </CardContent>
               </Card>
-            )
+            )}
 
             <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-1">
               <p><span className="font-medium">Tipo:</span> {importType === "companies" ? "Empresas" : "Ejecutivos"}</p>
