@@ -382,6 +382,28 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
               </CardContent>
             </Card>
 
+            {importType === "executives" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="autoCreateCompanies"
+                      checked={autoCreateCompanies}
+                      onChange={(e) => setAutoCreateCompanies(e.target.checked)}
+                      className="rounded border-input"
+                    />
+                    <Label htmlFor="autoCreateCompanies" className="text-sm">
+                      Crear automáticamente las empresas que no existen
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Si está activado, las empresas mencionadas en el archivo que no se encuentren en la base de datos se crearán automáticamente con el país del ejecutivo.
+                  </p>
+                </CardContent>
+              </Card>
+            )
+
             <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-1">
               <p><span className="font-medium">Tipo:</span> {importType === "companies" ? "Empresas" : "Ejecutivos"}</p>
               <p><span className="font-medium">Archivo:</span> {fileName}</p>
