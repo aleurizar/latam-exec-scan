@@ -166,10 +166,11 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
       for (let i = 0; i < mappedRows.length; i += CHUNK_SIZE) {
         const chunk = mappedRows.slice(i, i + CHUNK_SIZE);
         const { data, error } = await supabase.functions.invoke("import-data", {
-          body: {
+           body: {
             type: importType,
             rows: chunk,
             duplicateMode,
+            ...(importType === "executives" && { autoCreateCompanies }),
           },
         });
 
