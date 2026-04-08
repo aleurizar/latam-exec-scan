@@ -75,6 +75,7 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
     setFileName("");
     setMapping({});
     setDuplicateMode("skip");
+    setAutoCreateCompanies(true);
     setImporting(false);
     setResult(null);
   };
