@@ -86,14 +86,17 @@ export const AppSidebar = ({
       action: onToggleFilters,
     },
     {
-      icon: Upload,
-      label: "Importar",
-      action: onImport,
-    },
-    {
       icon: Download,
       label: "Exportar",
       action: onExport,
+    },
+    {
+      icon: Settings,
+      label: "Settings",
+      action: onImport,
+      submenu: [
+        { label: "Importar datos", action: onImport },
+      ],
     },
   ];
 
