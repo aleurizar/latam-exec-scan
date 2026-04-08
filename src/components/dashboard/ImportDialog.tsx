@@ -61,6 +61,7 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
   const [fileName, setFileName] = useState("");
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [duplicateMode, setDuplicateMode] = useState<DuplicateMode>("skip");
+  const [autoCreateCompanies, setAutoCreateCompanies] = useState(true);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ inserted: number; skipped: number; updated: number; errors: string[] } | null>(null);
 
