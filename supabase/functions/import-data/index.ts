@@ -10,6 +10,7 @@ interface ImportRequest {
   type: "companies" | "executives";
   rows: Record<string, string>[];
   duplicateMode: "skip" | "overwrite";
+  autoCreateCompanies?: boolean;
 }
 
 Deno.serve(async (req) => {
