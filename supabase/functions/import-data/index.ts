@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     }
 
     const body: ImportRequest = await req.json();
-    const { type, rows, duplicateMode } = body;
+    const { type, rows, duplicateMode, autoCreateCompanies } = body;
 
     if (!type || !rows || !Array.isArray(rows) || rows.length === 0) {
       return new Response(JSON.stringify({ error: "Datos inválidos" }), {
