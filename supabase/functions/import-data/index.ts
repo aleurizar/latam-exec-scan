@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.80.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 interface ImportRequest {
   type: "companies" | "executives";
@@ -22,10 +27,10 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify user and admin role
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: authError } = await userClient.auth.getUser();
@@ -36,7 +41,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check admin role
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: hasRole } = await adminClient.rpc("has_role", {
       _user_id: user.id,
@@ -73,150 +77,172 @@ Deno.serve(async (req) => {
     const errors: string[] = [];
 
     if (type === "companies") {
+      // Batch: fetch all existing company names upfront
+      const { data: existingCompanies } = await adminClient
+        .from("companies")
+        .select("id, name");
+
+      const nameToId = new Map<string, string>();
+      for (const c of existingCompanies || []) {
+        nameToId.set(c.name.toLowerCase().trim(), c.id);
+      }
+
+      const toInsert: any[] = [];
+      const toUpdate: { id: string; data: any }[] = [];
+
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        try {
-          if (!row.name || !row.country || !row.industry) {
-            errors.push(`Fila ${i + 1}: campos requeridos faltantes`);
-            continue;
-          }
+        if (!row.name || !row.country || !row.industry) {
+          errors.push(`Fila ${i + 1}: campos requeridos faltantes`);
+          continue;
+        }
 
-          // Check duplicate by name
-          const { data: existing } = await adminClient
-            .from("companies")
-            .select("id")
-            .ilike("name", row.name.trim())
-            .limit(1);
+        const existingId = nameToId.get(row.name.trim().toLowerCase());
 
-          if (existing && existing.length > 0) {
-            if (duplicateMode === "skip") {
-              skipped++;
-              continue;
-            }
-            // Overwrite
-            const { error: updateErr } = await adminClient
-              .from("companies")
-              .update({
+        if (existingId) {
+          if (duplicateMode === "skip") {
+            skipped++;
+          } else {
+            toUpdate.push({
+              id: existingId,
+              data: {
                 country: row.country.trim(),
                 industry: row.industry.trim(),
                 size: row.size?.trim() || null,
                 revenue_usd: row.revenue_usd ? parseInt(row.revenue_usd, 10) || null : null,
                 website: row.website?.trim() || null,
                 description: row.description?.trim() || null,
-              })
-              .eq("id", existing[0].id);
-
-            if (updateErr) {
-              errors.push(`Fila ${i + 1}: ${updateErr.message}`);
-            } else {
-              updated++;
-            }
-          } else {
-            const { error: insertErr } = await adminClient.from("companies").insert({
-              name: row.name.trim(),
-              country: row.country.trim(),
-              industry: row.industry.trim(),
-              size: row.size?.trim() || null,
-              revenue_usd: row.revenue_usd ? parseInt(row.revenue_usd, 10) || null : null,
-              website: row.website?.trim() || null,
-              description: row.description?.trim() || null,
+              },
             });
-
-            if (insertErr) {
-              errors.push(`Fila ${i + 1}: ${insertErr.message}`);
-            } else {
-              inserted++;
-            }
           }
-        } catch (e) {
-          errors.push(`Fila ${i + 1}: ${e.message}`);
+        } else {
+          nameToId.set(row.name.trim().toLowerCase(), "pending");
+          toInsert.push({
+            name: row.name.trim(),
+            country: row.country.trim(),
+            industry: row.industry.trim(),
+            size: row.size?.trim() || null,
+            revenue_usd: row.revenue_usd ? parseInt(row.revenue_usd, 10) || null : null,
+            website: row.website?.trim() || null,
+            description: row.description?.trim() || null,
+          });
         }
       }
+
+      // Batch insert
+      if (toInsert.length > 0) {
+        const { error: insertErr, data: insertedData } = await adminClient
+          .from("companies")
+          .insert(toInsert)
+          .select("id");
+        if (insertErr) {
+          errors.push(`Error batch insert: ${insertErr.message}`);
+        } else {
+          inserted = insertedData?.length || toInsert.length;
+        }
+      }
+
+      // Updates must be individual
+      for (const u of toUpdate) {
+        const { error: updateErr } = await adminClient
+          .from("companies")
+          .update(u.data)
+          .eq("id", u.id);
+        if (updateErr) errors.push(`Update error: ${updateErr.message}`);
+        else updated++;
+      }
+
     } else if (type === "executives") {
-      // Build company name -> id cache
-      const companyCache = new Map<string, string>();
+      // Pre-fetch all companies for name resolution
+      const { data: allCompanies } = await adminClient
+        .from("companies")
+        .select("id, name");
+
+      const companyMap = new Map<string, string>();
+      for (const c of allCompanies || []) {
+        companyMap.set(c.name.toLowerCase().trim(), c.id);
+      }
+
+      const toInsert: any[] = [];
+      const toUpdate: { id: string; data: any }[] = [];
+      const emailsToCheck: string[] = [];
+
+      // Collect emails for batch duplicate check
+      for (const row of rows) {
+        if (row.email?.trim()) emailsToCheck.push(row.email.trim().toLowerCase());
+      }
+
+      const existingByEmail = new Map<string, string>();
+      if (emailsToCheck.length > 0) {
+        // Fetch in batches of 100 emails
+        for (let i = 0; i < emailsToCheck.length; i += 100) {
+          const batch = emailsToCheck.slice(i, i + 100);
+          const { data: execs } = await adminClient
+            .from("executives")
+            .select("id, email")
+            .in("email", batch);
+          for (const e of execs || []) {
+            if (e.email) existingByEmail.set(e.email.toLowerCase(), e.id);
+          }
+        }
+      }
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        try {
-          if (!row.full_name || !row.position || !row.country || !row.company_name) {
-            errors.push(`Fila ${i + 1}: campos requeridos faltantes`);
-            continue;
-          }
-
-          // Resolve company_id
-          const companyName = row.company_name.trim().toLowerCase();
-          let companyId = companyCache.get(companyName);
-
-          if (!companyId) {
-            const { data: companies } = await adminClient
-              .from("companies")
-              .select("id")
-              .ilike("name", row.company_name.trim())
-              .limit(1);
-
-            if (companies && companies.length > 0) {
-              companyId = companies[0].id;
-              companyCache.set(companyName, companyId);
-            } else {
-              errors.push(`Fila ${i + 1}: empresa "${row.company_name}" no encontrada`);
-              continue;
-            }
-          }
-
-          // Check duplicate by email if available
-          let existingExec = null;
-          if (row.email?.trim()) {
-            const { data } = await adminClient
-              .from("executives")
-              .select("id")
-              .ilike("email", row.email.trim())
-              .limit(1);
-            existingExec = data?.[0] || null;
-          }
-
-          if (existingExec) {
-            if (duplicateMode === "skip") {
-              skipped++;
-              continue;
-            }
-            const { error: updateErr } = await adminClient
-              .from("executives")
-              .update({
-                full_name: row.full_name.trim(),
-                position: row.position.trim(),
-                country: row.country.trim(),
-                company_id: companyId,
-                seniority: row.seniority?.trim() || null,
-                linkedin_url: row.linkedin_url?.trim() || null,
-              })
-              .eq("id", existingExec.id);
-
-            if (updateErr) {
-              errors.push(`Fila ${i + 1}: ${updateErr.message}`);
-            } else {
-              updated++;
-            }
-          } else {
-            const { error: insertErr } = await adminClient.from("executives").insert({
-              full_name: row.full_name.trim(),
-              position: row.position.trim(),
-              country: row.country.trim(),
-              company_id: companyId,
-              email: row.email?.trim() || null,
-              seniority: row.seniority?.trim() || null,
-              linkedin_url: row.linkedin_url?.trim() || null,
-            });
-
-            if (insertErr) {
-              errors.push(`Fila ${i + 1}: ${insertErr.message}`);
-            } else {
-              inserted++;
-            }
-          }
-        } catch (e) {
-          errors.push(`Fila ${i + 1}: ${e.message}`);
+        if (!row.full_name || !row.position || !row.country || !row.company_name) {
+          errors.push(`Fila ${i + 1}: campos requeridos faltantes`);
+          continue;
         }
+
+        const companyId = companyMap.get(row.company_name.trim().toLowerCase());
+        if (!companyId) {
+          errors.push(`Fila ${i + 1}: empresa "${row.company_name}" no encontrada`);
+          continue;
+        }
+
+        const email = row.email?.trim() || null;
+        const existingId = email ? existingByEmail.get(email.toLowerCase()) : null;
+
+        const execData = {
+          full_name: row.full_name.trim(),
+          position: row.position.trim(),
+          country: row.country.trim(),
+          company_id: companyId,
+          email,
+          seniority: row.seniority?.trim() || null,
+          linkedin_url: row.linkedin_url?.trim() || null,
+        };
+
+        if (existingId) {
+          if (duplicateMode === "skip") {
+            skipped++;
+          } else {
+            toUpdate.push({ id: existingId, data: execData });
+          }
+        } else {
+          toInsert.push(execData);
+        }
+      }
+
+      if (toInsert.length > 0) {
+        const { error: insertErr, data: insertedData } = await adminClient
+          .from("executives")
+          .insert(toInsert)
+          .select("id");
+        if (insertErr) {
+          errors.push(`Error batch insert: ${insertErr.message}`);
+        } else {
+          inserted = insertedData?.length || toInsert.length;
+        }
+      }
+
+      for (const u of toUpdate) {
+        const { error: updateErr } = await adminClient
+          .from("executives")
+          .update(u.data)
+          .eq("id", u.id);
+        if (updateErr) errors.push(`Update error: ${updateErr.message}`);
+        else updated++;
       }
     }
 

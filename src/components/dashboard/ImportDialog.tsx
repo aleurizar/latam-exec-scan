@@ -157,19 +157,38 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("import-data", {
-        body: {
-          type: importType,
-          rows: mappedRows,
-          duplicateMode,
-        },
-      });
+      // Split into chunks of 200 rows to avoid timeouts
+      const CHUNK_SIZE = 200;
+      const totals = { inserted: 0, skipped: 0, updated: 0, errors: [] as string[] };
 
-      if (error) throw error;
+      for (let i = 0; i < mappedRows.length; i += CHUNK_SIZE) {
+        const chunk = mappedRows.slice(i, i + CHUNK_SIZE);
+        const { data, error } = await supabase.functions.invoke("import-data", {
+          body: {
+            type: importType,
+            rows: chunk,
+            duplicateMode,
+          },
+        });
 
-      setResult(data);
+        if (error) throw error;
+
+        totals.inserted += data.inserted || 0;
+        totals.skipped += data.skipped || 0;
+        totals.updated += data.updated || 0;
+        if (data.errors?.length) {
+          // Adjust error row numbers for chunk offset
+          totals.errors.push(...data.errors.map((e: string) => {
+            const match = e.match(/^Fila (\d+):(.*)/);
+            if (match) return `Fila ${parseInt(match[1]) + i}:${match[2]}`;
+            return e;
+          }));
+        }
+      }
+
+      setResult(totals);
       setStep("done");
-      toast.success(`Importación completada: ${data.inserted} insertados`);
+      toast.success(`Importación completada: ${totals.inserted} insertados`);
     } catch (err: any) {
       toast.error(err.message || "Error al importar");
       setStep("config");
