@@ -10,6 +10,7 @@ interface ImportRequest {
   type: "companies" | "executives";
   rows: Record<string, string>[];
   duplicateMode: "skip" | "overwrite";
+  autoCreateCompanies?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
     }
 
     const body: ImportRequest = await req.json();
-    const { type, rows, duplicateMode } = body;
+    const { type, rows, duplicateMode, autoCreateCompanies } = body;
 
     if (!type || !rows || !Array.isArray(rows) || rows.length === 0) {
       return new Response(JSON.stringify({ error: "Datos inválidos" }), {
@@ -194,10 +195,29 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const companyId = companyMap.get(row.company_name.trim().toLowerCase());
+        let companyId = companyMap.get(row.company_name.trim().toLowerCase());
         if (!companyId) {
-          errors.push(`Fila ${i + 1}: empresa "${row.company_name}" no encontrada`);
-          continue;
+          if (autoCreateCompanies) {
+            // Auto-create the company
+            const { data: newCompany, error: createErr } = await adminClient
+              .from("companies")
+              .insert({
+                name: row.company_name.trim(),
+                country: row.country.trim(),
+                industry: "Sin clasificar",
+              })
+              .select("id")
+              .single();
+            if (createErr || !newCompany) {
+              errors.push(`Fila ${i + 1}: no se pudo crear empresa "${row.company_name}": ${createErr?.message}`);
+              continue;
+            }
+            companyId = newCompany.id;
+            companyMap.set(row.company_name.trim().toLowerCase(), companyId);
+          } else {
+            errors.push(`Fila ${i + 1}: empresa "${row.company_name}" no encontrada`);
+            continue;
+          }
         }
 
         const email = row.email?.trim() || null;

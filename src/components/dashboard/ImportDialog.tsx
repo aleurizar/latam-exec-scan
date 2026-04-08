@@ -61,6 +61,7 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
   const [fileName, setFileName] = useState("");
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [duplicateMode, setDuplicateMode] = useState<DuplicateMode>("skip");
+  const [autoCreateCompanies, setAutoCreateCompanies] = useState(true);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ inserted: number; skipped: number; updated: number; errors: string[] } | null>(null);
 
@@ -74,6 +75,7 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
     setFileName("");
     setMapping({});
     setDuplicateMode("skip");
+    setAutoCreateCompanies(true);
     setImporting(false);
     setResult(null);
   };
@@ -164,10 +166,11 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
       for (let i = 0; i < mappedRows.length; i += CHUNK_SIZE) {
         const chunk = mappedRows.slice(i, i + CHUNK_SIZE);
         const { data, error } = await supabase.functions.invoke("import-data", {
-          body: {
+           body: {
             type: importType,
             rows: chunk,
             duplicateMode,
+            ...(importType === "executives" && { autoCreateCompanies }),
           },
         });
 
@@ -378,6 +381,28 @@ export const ImportDialog = ({ open, onOpenChange }: ImportDialogProps) => {
                 </RadioGroup>
               </CardContent>
             </Card>
+
+            {importType === "executives" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="autoCreateCompanies"
+                      checked={autoCreateCompanies}
+                      onChange={(e) => setAutoCreateCompanies(e.target.checked)}
+                      className="rounded border-input"
+                    />
+                    <Label htmlFor="autoCreateCompanies" className="text-sm">
+                      Crear automáticamente las empresas que no existen
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Si está activado, las empresas mencionadas en el archivo que no se encuentren en la base de datos se crearán automáticamente con el país del ejecutivo.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-1">
               <p><span className="font-medium">Tipo:</span> {importType === "companies" ? "Empresas" : "Ejecutivos"}</p>
