@@ -12,12 +12,13 @@ import { CreditUsage } from "@/pages/settings/CreditUsage";
 import { AdminUsers } from "@/pages/settings/AdminUsers";
 import { ImportDialog } from "@/components/dashboard/ImportDialog";
 
-type SettingsView = "profile" | "plan" | "upgrade" | "credits" | "notifications" | "security" | "admin-users";
+type SettingsView = "profile" | "plan" | "upgrade" | "credits" | "notifications" | "security" | "admin-users" | "import";
 
 const Settings = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<SettingsView>("plan");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string } | null>(null);
 
   useEffect(() => {
@@ -46,7 +47,10 @@ const Settings = () => {
     { id: "plan", label: "Plan y Créditos", icon: CreditCard },
     { id: "notifications", label: "Notificaciones", icon: Bell },
     { id: "security", label: "Seguridad", icon: Shield },
-    ...(isAdmin ? [{ id: "admin-users" as SettingsView, label: "Usuarios", icon: Users }] : []),
+    ...(isAdmin ? [
+      { id: "import" as SettingsView, label: "Importar datos", icon: Upload },
+      { id: "admin-users" as SettingsView, label: "Usuarios", icon: Users },
+    ] : []),
   ];
 
   return (
