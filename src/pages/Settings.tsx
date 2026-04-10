@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, CreditCard, Bell, Shield, Users } from "lucide-react";
+import { ArrowLeft, User, CreditCard, Bell, Shield, Users, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlanSettings } from "@/pages/settings/PlanSettings";
 import { UpgradePlan } from "@/pages/settings/UpgradePlan";
 import { CreditUsage } from "@/pages/settings/CreditUsage";
 import { AdminUsers } from "@/pages/settings/AdminUsers";
+import { ImportDialog } from "@/components/dashboard/ImportDialog";
 
 type SettingsView = "profile" | "plan" | "upgrade" | "credits" | "notifications" | "security" | "admin-users";
 
