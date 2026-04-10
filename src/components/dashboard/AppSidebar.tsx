@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Building2,
@@ -8,7 +9,6 @@ import {
   LogOut,
   Database,
   List,
-  Upload,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,6 @@ interface AppSidebarProps {
   onViewChange: (view: SidebarView) => void;
   onExport: () => void;
   onToggleFilters: () => void;
-  onImport: () => void;
   onSignOut: () => void;
 }
 
@@ -37,9 +36,9 @@ export const AppSidebar = ({
   onViewChange,
   onExport,
   onToggleFilters,
-  onImport,
   onSignOut,
 }: AppSidebarProps) => {
+  const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
 
   const items: SidebarItem[] = [
@@ -93,10 +92,7 @@ export const AppSidebar = ({
     {
       icon: Settings,
       label: "Settings",
-      action: onImport,
-      submenu: [
-        { label: "Importar datos", action: onImport },
-      ],
+      action: () => navigate("/settings"),
     },
   ];
 
