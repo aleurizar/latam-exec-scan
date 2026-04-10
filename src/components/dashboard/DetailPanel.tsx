@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Building2, Globe, MapPin, Users, DollarSign, ExternalLink, User, Briefcase, Mail, Linkedin, Cpu, Lock } from "lucide-react";
+import { X, Building2, Globe, MapPin, Users, DollarSign, ExternalLink, User, Briefcase, Mail, Linkedin, Cpu, Lock, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUserPlan } from "@/hooks/useUserPlan";
+import { useEmailCredits } from "@/hooks/useEmailCredits";
 
 interface DetailPanelProps {
   type: "company" | "executive" | null;
@@ -52,12 +51,19 @@ interface CompanyExecutive {
   seniority: string | null;
 }
 
+const maskEmail = (email: string) => {
+  const [local, domain] = email.split("@");
+  if (!domain) return "***@***.com";
+  return `${local[0]}***@${domain}`;
+};
+
 export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps) => {
   const [company, setCompany] = useState<Company | null>(null);
   const [executive, setExecutive] = useState<Executive | null>(null);
-  const { canViewContactInfo } = useUserPlan();
+  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
   const [companyExecs, setCompanyExecs] = useState<CompanyExecutive[]>([]);
   const [loading, setLoading] = useState(false);
+  const [revealingEmail, setRevealingEmail] = useState(false);
 
   const isOpen = type !== null && id !== null;
 
@@ -92,6 +98,13 @@ export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps)
     setCompany(null);
     setCompanyExecs([]);
     setLoading(false);
+  };
+
+  const handleRevealEmail = async () => {
+    if (!executive) return;
+    setRevealingEmail(true);
+    await revealEmail(executive.id);
+    setRevealingEmail(false);
   };
 
   const formatRevenue = (revenue: number | null) => {
@@ -197,27 +210,35 @@ export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps)
                   <Briefcase className="w-4 h-4 text-muted-foreground" />
                   <Badge variant="secondary">{executive.seniority || "N/A"}</Badge>
                 </div>
-                {canViewContactInfo ? (
-                  <>
-                    {executive.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <a href={`mailto:${executive.email}`} className="text-primary hover:underline">{executive.email}</a>
-                      </div>
+                {/* Email with reveal logic */}
+                {executive.email ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    {isRevealed(executive.id) ? (
+                      <a href={`mailto:${executive.email}`} className="text-primary hover:underline">{executive.email}</a>
+                    ) : (
+                      <span className="text-muted-foreground inline-flex items-center gap-1">
+                        {maskEmail(executive.email)}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          disabled={revealingEmail || !canRevealEmail}
+                          onClick={handleRevealEmail}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </span>
                     )}
-                    {executive.linkedin_url && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Linkedin className="w-4 h-4 text-muted-foreground" />
-                        <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                          Ver perfil <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Lock className="w-4 h-4" />
-                    <span>Actualiza a Pro para ver contacto</span>
+                  </div>
+                ) : null}
+                {/* LinkedIn */}
+                {executive.linkedin_url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Linkedin className="w-4 h-4 text-muted-foreground" />
+                    <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                      Ver perfil <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
                 )}
               </div>

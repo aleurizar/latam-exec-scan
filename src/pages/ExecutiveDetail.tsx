@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, User, Briefcase, MapPin, Mail, Linkedin, Building2, ExternalLink, Cpu, Lock } from "lucide-react";
-import { useUserPlan } from "@/hooks/useUserPlan";
+import { ArrowLeft, User, Briefcase, MapPin, Mail, Linkedin, Building2, ExternalLink, Cpu, Plus } from "lucide-react";
+import { useEmailCredits } from "@/hooks/useEmailCredits";
 
 interface Executive {
   id: string;
@@ -26,12 +26,19 @@ interface Executive {
   } | null;
 }
 
+const maskEmail = (email: string) => {
+  const [local, domain] = email.split("@");
+  if (!domain) return "***@***.com";
+  return `${local[0]}***@${domain}`;
+};
+
 const ExecutiveDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [executive, setExecutive] = useState<Executive | null>(null);
   const [loading, setLoading] = useState(true);
-  const { canViewContactInfo } = useUserPlan();
+  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
+  const [revealingEmail, setRevealingEmail] = useState(false);
 
   useEffect(() => {
     if (id) fetchExecutive();
@@ -51,6 +58,13 @@ const ExecutiveDetail = () => {
       setExecutive(data as Executive);
     }
     setLoading(false);
+  };
+
+  const handleRevealEmail = async () => {
+    if (!executive) return;
+    setRevealingEmail(true);
+    await revealEmail(executive.id);
+    setRevealingEmail(false);
   };
 
   if (loading) {
@@ -74,7 +88,6 @@ const ExecutiveDetail = () => {
       </header>
 
       <main className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Executive Header */}
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <User className="w-8 h-8 text-primary" />
@@ -86,7 +99,6 @@ const ExecutiveDetail = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Contact Info */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Información de Contacto</CardTitle>
@@ -100,35 +112,40 @@ const ExecutiveDetail = () => {
                 <Briefcase className="w-4 h-4 text-muted-foreground" />
                 <Badge variant="secondary">{executive.seniority || "N/A"}</Badge>
               </div>
-              {canViewContactInfo ? (
-                <>
-                  {executive.email && (
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <a href={`mailto:${executive.email}`} className="text-primary hover:underline">
-                        {executive.email}
-                      </a>
-                    </div>
+              {executive.email && (
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  {isRevealed(executive.id) ? (
+                    <a href={`mailto:${executive.email}`} className="text-primary hover:underline">
+                      {executive.email}
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground inline-flex items-center gap-2">
+                      {maskEmail(executive.email)}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        disabled={revealingEmail || !canRevealEmail}
+                        onClick={handleRevealEmail}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </span>
                   )}
-                  {executive.linkedin_url && (
-                    <div className="flex items-center gap-3">
-                      <Linkedin className="w-4 h-4 text-muted-foreground" />
-                      <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                        Ver perfil <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <Lock className="w-4 h-4" />
-                  <span>Actualiza a Professional para ver datos de contacto</span>
+                </div>
+              )}
+              {executive.linkedin_url && (
+                <div className="flex items-center gap-3">
+                  <Linkedin className="w-4 h-4 text-muted-foreground" />
+                  <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                    Ver perfil <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Company Info */}
           {executive.companies && (
             <Card>
               <CardHeader>
@@ -155,7 +172,6 @@ const ExecutiveDetail = () => {
           )}
         </div>
 
-        {/* Technologies */}
         {executive.technologies && executive.technologies.length > 0 && (
           <Card>
             <CardHeader>
