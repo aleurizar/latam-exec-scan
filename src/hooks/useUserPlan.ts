@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type PlanType = "basic" | "professional" | "enterprise";
+export type PlanType = "basic" | "silver" | "gold";
 
 export const useUserPlan = () => {
   const [plan, setPlan] = useState<PlanType>("basic");
@@ -24,7 +24,5 @@ export const useUserPlan = () => {
     fetchPlan();
   }, []);
 
-  const canViewContactInfo = plan === "professional" || plan === "enterprise";
-
-  return { plan, loading, canViewContactInfo };
+  return { plan, loading };
 };
