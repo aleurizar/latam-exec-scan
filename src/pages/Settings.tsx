@@ -138,9 +138,21 @@ const Settings = () => {
             </Card>
           )}
 
+          {activeView === "import" && isAdmin && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Upload className="w-5 h-5" />Importar Datos</CardTitle></CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">Importa empresas y ejecutivos desde archivos CSV o Excel.</p>
+                <Button onClick={() => setShowImport(true)}>Iniciar importación</Button>
+              </CardContent>
+            </Card>
+          )}
+
           {activeView === "admin-users" && isAdmin && <AdminUsers />}
         </div>
       </div>
+
+      <ImportDialog open={showImport} onOpenChange={setShowImport} />
     </div>
   );
 };
