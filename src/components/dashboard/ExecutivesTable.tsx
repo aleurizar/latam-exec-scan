@@ -7,10 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterState } from "@/pages/Dashboard";
-import { ExternalLink, ListPlus, Lock } from "lucide-react";
+import { ExternalLink, ListPlus, Lock, Plus } from "lucide-react";
 import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
-import { useUserPlan } from "@/hooks/useUserPlan";
+import { useEmailCredits } from "@/hooks/useEmailCredits";
 
 interface ExecutivesTableProps {
   filters: FilterState;
@@ -29,15 +29,22 @@ interface Executive {
   companies: { name: string; industry: string } | null;
 }
 
+const maskEmail = (email: string) => {
+  const [local, domain] = email.split("@");
+  if (!domain) return "***@***.com";
+  return `${local[0]}***@${domain}`;
+};
+
 export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableProps) => {
   const [executives, setExecutives] = useState<Executive[]>([]);
   const [loading, setLoading] = useState(true);
-  const { canViewContactInfo } = useUserPlan();
+  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
+  const [revealingId, setRevealingId] = useState<string | null>(null);
 
   useEffect(() => { setPage(0); }, [filters]);
   useEffect(() => { fetchExecutives(); }, [filters, page, pageSize]);
@@ -54,6 +61,13 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
       setTotalCount(count || 0);
     }
     setLoading(false);
+  };
+
+  const handleReveal = async (e: React.MouseEvent, execId: string) => {
+    e.stopPropagation();
+    setRevealingId(execId);
+    await revealEmail(execId);
+    setRevealingId(null);
   };
 
   const toggleSelect = (id: string) => {
@@ -105,10 +119,11 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     onCheckedChange={toggleAll}
                   />
                 </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Country</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Cargo</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>País</TableHead>
                 <TableHead>Seniority</TableHead>
                 <TableHead>LinkedIn</TableHead>
               </TableRow>
@@ -116,8 +131,8 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
             <TableBody>
               {executives.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                    No executives found. Adjust your filters or add sample data.
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                    No se encontraron ejecutivos. Ajusta los filtros o agrega datos.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -135,6 +150,30 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                       </span>
                     </TableCell>
                     <TableCell>{exec.position}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {exec.email ? (
+                        isRevealed(exec.id) ? (
+                          <a href={`mailto:${exec.email}`} className="text-primary hover:underline text-sm">
+                            {exec.email}
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground inline-flex items-center gap-1 text-sm">
+                            {maskEmail(exec.email)}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5"
+                              disabled={revealingId === exec.id || !canRevealEmail}
+                              onClick={(e) => handleReveal(e, exec.id)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-muted-foreground text-sm">N/A</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {exec.companies ? (
                         <div>
@@ -146,15 +185,11 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                     <TableCell>{exec.seniority || "N/A"}</TableCell>
                     <TableCell>
-                      {canViewContactInfo ? (
-                        exec.linkedin_url ? (
-                          <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                            Profile <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : <span className="text-muted-foreground">N/A</span>
-                      ) : (
-                        <span className="text-muted-foreground inline-flex items-center gap-1"><Lock className="w-3 h-3" /> Pro</span>
-                      )}
+                      {exec.linkedin_url ? (
+                        <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          Profile <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : <span className="text-muted-foreground">N/A</span>}
                     </TableCell>
                   </TableRow>
                 ))
