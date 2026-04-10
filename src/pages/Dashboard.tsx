@@ -188,10 +188,6 @@ const Dashboard = () => {
         filters={filters}
       />
 
-      <ImportDialog
-        open={showImport}
-        onOpenChange={setShowImport}
-      />
     </div>
   );
 };
