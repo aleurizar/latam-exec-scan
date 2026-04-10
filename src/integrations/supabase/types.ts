@@ -53,6 +53,35 @@ export type Database = {
         }
         Relationships: []
       }
+      email_reveals: {
+        Row: {
+          created_at: string
+          executive_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          executive_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          executive_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_reveals_executive_id_fkey"
+            columns: ["executive_id"]
+            isOneToOne: false
+            referencedRelation: "executives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       executives: {
         Row: {
           company_id: string
@@ -337,6 +366,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_email_credit_limit: { Args: { _plan: string }; Returns: number }
+      get_used_credits: { Args: { _user_id: string }; Returns: number }
       get_user_plan: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
