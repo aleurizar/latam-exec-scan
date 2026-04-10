@@ -100,7 +100,6 @@ const Dashboard = () => {
         onViewChange={(v) => { setActiveView(v); closeDetail(); }}
         onExport={() => setShowExport(true)}
         onToggleFilters={() => setShowFilters(!showFilters)}
-        onImport={() => setShowImport(true)}
         onSignOut={handleSignOut}
       />
 
