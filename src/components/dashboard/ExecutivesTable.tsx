@@ -11,6 +11,7 @@ import { ExternalLink, ListPlus, Lock, Plus } from "lucide-react";
 import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
 import { useEmailCredits } from "@/hooks/useEmailCredits";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface ExecutivesTableProps {
   filters: FilterState;
@@ -45,6 +46,8 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
   const [revealingId, setRevealingId] = useState<string | null>(null);
+  const { plan } = useUserPlan();
+  const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
   useEffect(() => { fetchExecutives(); }, [filters, page, pageSize]);
@@ -185,7 +188,11 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                     <TableCell>{exec.seniority || "N/A"}</TableCell>
                     <TableCell>
-                      {exec.linkedin_url ? (
+                      {isBasic ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
+                          <Lock className="w-3 h-3" /> <span className="blur-sm select-none">Profile</span>
+                        </span>
+                      ) : exec.linkedin_url ? (
                         <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           Profile <ExternalLink className="w-3 h-3" />
                         </a>

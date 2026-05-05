@@ -23,10 +23,10 @@ interface ExportDialogProps {
   filters: FilterState;
 }
 
-const PLAN_LIMITS = {
-  basic: 500,
-  professional: 5000,
-  enterprise: 50000,
+const PLAN_LIMITS: Record<string, number> = {
+  basic: 0,
+  silver: 5000,
+  gold: 50000,
 };
 
 export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDialogProps) => {
@@ -62,7 +62,7 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
 
     setQuota({
       used: quotaData?.records_exported || 0,
-      limit: PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS],
+      limit: PLAN_LIMITS[plan] ?? 0,
       plan,
     });
   };
@@ -133,29 +133,40 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Monthly Quota</span>
-                  <Badge variant={usagePercent > 80 ? "destructive" : "secondary"}>
-                    {quota.used} / {quota.limit} records
-                  </Badge>
+          {quota.plan === "basic" ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-medium">La exportación no está disponible en el plan Basic</p>
+                  <p className="text-sm">Mejorá a Silver o Gold para exportar datos.</p>
                 </div>
-                <div className="w-full bg-secondary rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                  />
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Cuota mensual ({quota.plan})</span>
+                    <Badge variant={usagePercent > 80 ? "destructive" : "secondary"}>
+                      {quota.used} / {quota.limit} registros
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {remaining} registros disponibles este mes
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {remaining} records remaining this month
-                </p>
-              </div>
-            </AlertDescription>
-          </Alert>
-
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             <Label>Export Format</Label>
             <RadioGroup value={format} onValueChange={(v) => setFormat(v as "csv" | "xlsx")}>
@@ -201,9 +212,9 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleExport} disabled={loading || remaining <= 0}>
+          <Button onClick={handleExport} disabled={loading || remaining <= 0 || quota.plan === "basic"}>
             <Download className="w-4 h-4 mr-2" />
-            {loading ? "Exporting..." : "Export"}
+            {loading ? "Exportando..." : "Exportar"}
           </Button>
         </div>
       </DialogContent>

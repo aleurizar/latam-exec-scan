@@ -7,9 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterState } from "@/pages/Dashboard";
-import { ExternalLink, ListPlus } from "lucide-react";
+import { ExternalLink, ListPlus, Lock } from "lucide-react";
 import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface CompaniesTableProps {
   filters: FilterState;
@@ -34,6 +35,8 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
   const [totalCount, setTotalCount] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
+  const { plan } = useUserPlan();
+  const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
   useEffect(() => { fetchCompanies(); }, [filters, page, pageSize]);
@@ -140,9 +143,17 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
                     <TableCell><Badge variant="outline">{company.country}</Badge></TableCell>
                     <TableCell>{company.industry}</TableCell>
                     <TableCell>{company.size || "N/A"}</TableCell>
-                    <TableCell>{formatRevenue(company.revenue_usd)}</TableCell>
                     <TableCell>
-                      {company.website ? (
+                      {isBasic ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground blur-sm select-none">$XX.XM</span>
+                      ) : formatRevenue(company.revenue_usd)}
+                    </TableCell>
+                    <TableCell>
+                      {isBasic ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
+                          <Lock className="w-3 h-3" /> <span className="blur-sm select-none">website.com</span>
+                        </span>
+                      ) : company.website ? (
                         <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           Visit <ExternalLink className="w-3 h-3" />
                         </a>
