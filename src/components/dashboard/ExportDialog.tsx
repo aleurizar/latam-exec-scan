@@ -62,7 +62,7 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
 
     setQuota({
       used: quotaData?.records_exported || 0,
-      limit: PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS],
+      limit: PLAN_LIMITS[plan] ?? 0,
       plan,
     });
   };
