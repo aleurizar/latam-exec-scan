@@ -133,29 +133,40 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Monthly Quota</span>
-                  <Badge variant={usagePercent > 80 ? "destructive" : "secondary"}>
-                    {quota.used} / {quota.limit} records
-                  </Badge>
+          {quota.plan === "basic" ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-medium">La exportación no está disponible en el plan Basic</p>
+                  <p className="text-sm">Mejorá a Silver o Gold para exportar datos.</p>
                 </div>
-                <div className="w-full bg-secondary rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                  />
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Cuota mensual ({quota.plan})</span>
+                    <Badge variant={usagePercent > 80 ? "destructive" : "secondary"}>
+                      {quota.used} / {quota.limit} registros
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {remaining} registros disponibles este mes
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {remaining} records remaining this month
-                </p>
-              </div>
-            </AlertDescription>
-          </Alert>
-
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             <Label>Export Format</Label>
             <RadioGroup value={format} onValueChange={(v) => setFormat(v as "csv" | "xlsx")}>
