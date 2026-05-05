@@ -143,9 +143,17 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
                     <TableCell><Badge variant="outline">{company.country}</Badge></TableCell>
                     <TableCell>{company.industry}</TableCell>
                     <TableCell>{company.size || "N/A"}</TableCell>
-                    <TableCell>{formatRevenue(company.revenue_usd)}</TableCell>
                     <TableCell>
-                      {company.website ? (
+                      {isBasic ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground blur-sm select-none">$XX.XM</span>
+                      ) : formatRevenue(company.revenue_usd)}
+                    </TableCell>
+                    <TableCell>
+                      {isBasic ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
+                          <Lock className="w-3 h-3" /> <span className="blur-sm select-none">website.com</span>
+                        </span>
+                      ) : company.website ? (
                         <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           Visit <ExternalLink className="w-3 h-3" />
                         </a>
