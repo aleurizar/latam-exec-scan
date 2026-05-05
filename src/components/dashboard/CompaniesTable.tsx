@@ -35,6 +35,8 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
   const [totalCount, setTotalCount] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
+  const { plan } = useUserPlan();
+  const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
   useEffect(() => { fetchCompanies(); }, [filters, page, pageSize]);
