@@ -212,9 +212,9 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleExport} disabled={loading || remaining <= 0}>
+          <Button onClick={handleExport} disabled={loading || remaining <= 0 || quota.plan === "basic"}>
             <Download className="w-4 h-4 mr-2" />
-            {loading ? "Exporting..." : "Export"}
+            {loading ? "Exportando..." : "Exportar"}
           </Button>
         </div>
       </DialogContent>
