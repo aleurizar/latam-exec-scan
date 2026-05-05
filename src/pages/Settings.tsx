@@ -10,15 +10,18 @@ import { PlanSettings } from "@/pages/settings/PlanSettings";
 import { UpgradePlan } from "@/pages/settings/UpgradePlan";
 import { CreditUsage } from "@/pages/settings/CreditUsage";
 import { AdminUsers } from "@/pages/settings/AdminUsers";
+import { CheckoutSimulado } from "@/pages/settings/CheckoutSimulado";
 import { ImportDialog } from "@/components/dashboard/ImportDialog";
+import { PlanType } from "@/hooks/useUserPlan";
 
-type SettingsView = "profile" | "plan" | "upgrade" | "credits" | "notifications" | "security" | "admin-users" | "import";
+type SettingsView = "profile" | "plan" | "upgrade" | "checkout" | "credits" | "notifications" | "security" | "admin-users" | "import";
 
 const Settings = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<SettingsView>("plan");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<Exclude<PlanType, "basic"> | null>(null);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string } | null>(null);
 
   useEffect(() => {
@@ -113,7 +116,25 @@ const Settings = () => {
           )}
 
           {activeView === "upgrade" && (
-            <UpgradePlan onBack={() => setActiveView("plan")} />
+            <UpgradePlan
+              onBack={() => setActiveView("plan")}
+              onSelectPaidPlan={(p) => {
+                setCheckoutPlan(p);
+                setActiveView("checkout");
+              }}
+            />
+          )}
+
+          {activeView === "checkout" && checkoutPlan && (
+            <CheckoutSimulado
+              plan={checkoutPlan}
+              onBack={() => setActiveView("upgrade")}
+              onSuccess={() => {
+                setCheckoutPlan(null);
+                setActiveView("plan");
+                setTimeout(() => window.location.reload(), 800);
+              }}
+            />
           )}
 
           {activeView === "credits" && (
