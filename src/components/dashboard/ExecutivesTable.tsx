@@ -188,7 +188,11 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                     <TableCell>{exec.seniority || "N/A"}</TableCell>
                     <TableCell>
-                      {exec.linkedin_url ? (
+                      {isBasic ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
+                          <Lock className="w-3 h-3" /> <span className="blur-sm select-none">Profile</span>
+                        </span>
+                      ) : exec.linkedin_url ? (
                         <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           Profile <ExternalLink className="w-3 h-3" />
                         </a>
