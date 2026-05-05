@@ -11,6 +11,7 @@ import { ExternalLink, ListPlus, Lock, Plus } from "lucide-react";
 import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
 import { useEmailCredits } from "@/hooks/useEmailCredits";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface ExecutivesTableProps {
   filters: FilterState;
