@@ -21,6 +21,7 @@ const Settings = () => {
   const [activeView, setActiveView] = useState<SettingsView>("plan");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<Exclude<PlanType, "basic"> | null>(null);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string } | null>(null);
 
   useEffect(() => {
