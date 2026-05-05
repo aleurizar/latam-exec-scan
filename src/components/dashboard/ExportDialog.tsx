@@ -23,10 +23,10 @@ interface ExportDialogProps {
   filters: FilterState;
 }
 
-const PLAN_LIMITS = {
-  basic: 500,
-  professional: 5000,
-  enterprise: 50000,
+const PLAN_LIMITS: Record<string, number> = {
+  basic: 0,
+  silver: 5000,
+  gold: 50000,
 };
 
 export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDialogProps) => {
