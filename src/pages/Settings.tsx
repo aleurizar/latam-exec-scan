@@ -116,7 +116,25 @@ const Settings = () => {
           )}
 
           {activeView === "upgrade" && (
-            <UpgradePlan onBack={() => setActiveView("plan")} />
+            <UpgradePlan
+              onBack={() => setActiveView("plan")}
+              onSelectPaidPlan={(p) => {
+                setCheckoutPlan(p);
+                setActiveView("checkout");
+              }}
+            />
+          )}
+
+          {activeView === "checkout" && checkoutPlan && (
+            <CheckoutSimulado
+              plan={checkoutPlan}
+              onBack={() => setActiveView("upgrade")}
+              onSuccess={() => {
+                setCheckoutPlan(null);
+                setActiveView("plan");
+                setTimeout(() => window.location.reload(), 800);
+              }}
+            />
           )}
 
           {activeView === "credits" && (
