@@ -46,6 +46,8 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
   const [revealingId, setRevealingId] = useState<string | null>(null);
+  const { plan } = useUserPlan();
+  const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
   useEffect(() => { fetchExecutives(); }, [filters, page, pageSize]);
