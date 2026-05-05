@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 interface UpgradePlanProps {
   onBack: () => void;
+  onSelectPaidPlan: (plan: Exclude<PlanType, "basic">) => void;
 }
 
 const plans = [
