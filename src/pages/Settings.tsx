@@ -10,9 +10,11 @@ import { PlanSettings } from "@/pages/settings/PlanSettings";
 import { UpgradePlan } from "@/pages/settings/UpgradePlan";
 import { CreditUsage } from "@/pages/settings/CreditUsage";
 import { AdminUsers } from "@/pages/settings/AdminUsers";
+import { CheckoutSimulado } from "@/pages/settings/CheckoutSimulado";
 import { ImportDialog } from "@/components/dashboard/ImportDialog";
+import { PlanType } from "@/hooks/useUserPlan";
 
-type SettingsView = "profile" | "plan" | "upgrade" | "credits" | "notifications" | "security" | "admin-users" | "import";
+type SettingsView = "profile" | "plan" | "upgrade" | "checkout" | "credits" | "notifications" | "security" | "admin-users" | "import";
 
 const Settings = () => {
   const navigate = useNavigate();
