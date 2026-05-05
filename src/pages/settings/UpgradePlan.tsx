@@ -56,25 +56,27 @@ const plans = [
   },
 ];
 
-export const UpgradePlan = ({ onBack }: UpgradePlanProps) => {
+export const UpgradePlan = ({ onBack, onSelectPaidPlan }: UpgradePlanProps) => {
   const { plan: currentPlan } = useUserPlan();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleSelectPlan = async (planId: PlanType) => {
     if (planId === currentPlan) return;
+
+    // Planes pagos van al checkout simulado
+    if (planId !== "basic") {
+      onSelectPaidPlan(planId);
+      return;
+    }
+
+    // Plan Basic se activa directo
     setLoading(planId);
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast.error("Sesión no válida"); return; }
-
-      const { data, error } = await supabase.functions.invoke("update-plan", {
+      const { error } = await supabase.functions.invoke("update-plan", {
         body: { plan: planId },
       });
-
       if (error) throw error;
-      toast.success(`Plan actualizado a ${planId.charAt(0).toUpperCase() + planId.slice(1)}`);
-      // Reload to refresh plan state
+      toast.success("Plan actualizado a Basic");
       setTimeout(() => window.location.reload(), 500);
     } catch (err: any) {
       toast.error(err.message || "Error al actualizar plan");
