@@ -379,7 +379,7 @@ export type Database = {
     }
     Enums: {
       export_status: "pending" | "processing" | "completed" | "failed"
-      plan_type: "basic" | "professional" | "enterprise"
+      plan_type: "basic" | "silver" | "gold"
       user_role: "admin" | "manager" | "analyst"
     }
     CompositeTypes: {
@@ -509,7 +509,7 @@ export const Constants = {
   public: {
     Enums: {
       export_status: ["pending", "processing", "completed", "failed"],
-      plan_type: ["basic", "professional", "enterprise"],
+      plan_type: ["basic", "silver", "gold"],
       user_role: ["admin", "manager", "analyst"],
     },
   },
