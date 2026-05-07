@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (rows.length > 5000) {
-      return new Response(JSON.stringify({ error: "Máximo 5000 filas por importación" }), {
+    if (rows.length > 10000) {
+      return new Response(JSON.stringify({ error: "Máximo 10000 filas por importación" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
