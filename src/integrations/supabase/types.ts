@@ -366,6 +366,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_all_users_with_credits: {
+        Args: never
+        Returns: {
+          credits_used: number
+          email: string
+          full_name: string
+          id: string
+          plan: string
+        }[]
+      }
       get_email_credit_limit: { Args: { _plan: string }; Returns: number }
       get_used_credits: { Args: { _user_id: string }; Returns: number }
       get_user_plan: { Args: { _user_id: string }; Returns: string }
@@ -376,6 +386,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       export_status: "pending" | "processing" | "completed" | "failed"

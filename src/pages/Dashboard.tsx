@@ -84,7 +84,7 @@ const Dashboard = () => {
     closeDetail();
   };
 
-  const debouncedSearch = useDebounce(filters.search, 300);
+  const debouncedSearch = useDebounce(filters.search, 400);
   const debouncedFilters = useMemo(
     () => ({ ...filters, search: debouncedSearch }),
     [filters.country, filters.industry, filters.size, debouncedSearch]

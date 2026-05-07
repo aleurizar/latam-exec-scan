@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
@@ -37,12 +38,9 @@ const maskEmail = (email: string) => {
 };
 
 export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableProps) => {
-  const [executives, setExecutives] = useState<Executive[]>([]);
-  const [loading, setLoading] = useState(true);
   const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  const [totalCount, setTotalCount] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
   const [revealingId, setRevealingId] = useState<string | null>(null);
@@ -50,21 +48,31 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
   const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
-  useEffect(() => { fetchExecutives(); }, [filters, page, pageSize]);
 
-  const fetchExecutives = async () => {
-    setLoading(true);
-    let query = supabase.from("executives").select("*, companies(name, industry)", { count: "exact" }).order("full_name");
-    if (filters.country.length > 0) query = query.in("country", filters.country);
-    if (filters.search) query = query.or(`full_name.ilike.%${filters.search}%,position.ilike.%${filters.search}%`);
-    const from = page * pageSize;
-    const { data, error, count } = await query.range(from, from + pageSize - 1);
-    if (!error) {
-      setExecutives(data || []);
-      setTotalCount(count || 0);
-    }
-    setLoading(false);
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ["executives", filters, page, pageSize],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    queryFn: async () => {
+      let query = supabase
+        .from("executives")
+        .select("*, companies(name, industry)", { count: "estimated" })
+        .order("full_name");
+      if (filters.country.length > 0) query = query.in("country", filters.country);
+      if (filters.search) {
+        query = query.or(
+          `full_name.ilike.%${filters.search}%,position.ilike.%${filters.search}%`
+        );
+      }
+      const from = page * pageSize;
+      const { data, error, count } = await query.range(from, from + pageSize - 1);
+      if (error) throw error;
+      return { rows: (data || []) as Executive[], total: count || 0 };
+    },
+  });
+
+  const executives = data?.rows ?? [];
+  const totalCount = data?.total ?? 0;
 
   const handleReveal = async (e: React.MouseEvent, execId: string) => {
     e.stopPropagation();
@@ -89,7 +97,7 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
     }
   };
 
-  if (loading) {
+  if (isLoading && executives.length === 0) {
     return (
       <Card>
         <div className="p-6 space-y-4">
