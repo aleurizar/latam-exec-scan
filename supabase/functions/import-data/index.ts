@@ -130,16 +130,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Batch insert
+      // Batch insert in chunks of 1000
       if (toInsert.length > 0) {
-        const { error: insertErr, data: insertedData } = await adminClient
-          .from("companies")
-          .insert(toInsert)
-          .select("id");
-        if (insertErr) {
-          errors.push(`Error batch insert: ${insertErr.message}`);
-        } else {
-          inserted = insertedData?.length || toInsert.length;
+        const CHUNK = 1000;
+        for (let i = 0; i < toInsert.length; i += CHUNK) {
+          const slice = toInsert.slice(i, i + CHUNK);
+          const { error: insertErr, data: insertedData } = await adminClient
+            .from("companies")
+            .insert(slice)
+            .select("id");
+          if (insertErr) {
+            errors.push(`Error batch insert (chunk ${i / CHUNK + 1}): ${insertErr.message}`);
+          } else {
+            inserted += insertedData?.length || slice.length;
+          }
         }
       }
 
