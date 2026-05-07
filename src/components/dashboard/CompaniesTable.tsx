@@ -29,34 +29,37 @@ interface Company {
 }
 
 export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps) => {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  const [totalCount, setTotalCount] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
   const { plan } = useUserPlan();
   const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
-  useEffect(() => { fetchCompanies(); }, [filters, page, pageSize]);
 
-  const fetchCompanies = async () => {
-    setLoading(true);
-    let query = supabase.from("companies").select("*", { count: "exact" }).order("name");
-    if (filters.country.length > 0) query = query.in("country", filters.country);
-    if (filters.industry.length > 0) query = query.in("industry", filters.industry);
-    if (filters.size.length > 0) query = query.in("size", filters.size);
-    if (filters.search) query = query.ilike("name", `%${filters.search}%`);
-    const from = page * pageSize;
-    const { data, error, count } = await query.range(from, from + pageSize - 1);
-    if (!error) {
-      setCompanies(data || []);
-      setTotalCount(count || 0);
-    }
-    setLoading(false);
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ["companies", filters, page, pageSize],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    queryFn: async () => {
+      let query = supabase
+        .from("companies")
+        .select("*", { count: "estimated" })
+        .order("name");
+      if (filters.country.length > 0) query = query.in("country", filters.country);
+      if (filters.industry.length > 0) query = query.in("industry", filters.industry);
+      if (filters.size.length > 0) query = query.in("size", filters.size);
+      if (filters.search) query = query.ilike("name", `%${filters.search}%`);
+      const from = page * pageSize;
+      const { data, error, count } = await query.range(from, from + pageSize - 1);
+      if (error) throw error;
+      return { rows: (data || []) as Company[], total: count || 0 };
+    },
+  });
+
+  const companies = data?.rows ?? [];
+  const totalCount = data?.total ?? 0;
 
   const formatRevenue = (revenue: number | null) => {
     if (!revenue) return "N/A";
@@ -79,7 +82,7 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
     }
   };
 
-  if (loading) {
+  if (isLoading && companies.length === 0) {
     return (
       <Card>
         <div className="p-6 space-y-4">
