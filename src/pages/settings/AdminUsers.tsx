@@ -20,27 +20,9 @@ export const AdminUsers = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      // Fetch all profiles (admin can see via RLS or we use the visible ones)
-      // Since profiles RLS only allows own profile, we need a workaround
-      // Admin sees their own profile + we use the get_used_credits function
-      // For MVP, admin can see all profiles via a security definer approach
-      // But current RLS restricts to own profile. Let's fetch what we can.
-      
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, plan");
-
-      if (profiles) {
-        const usersWithCredits = await Promise.all(
-          profiles.map(async (p) => {
-            const { data } = await supabase.rpc("get_used_credits", { _user_id: p.id });
-            return {
-              ...p,
-              credits_used: (data as number) || 0,
-            };
-          })
-        );
-        setUsers(usersWithCredits);
+      const { data, error } = await supabase.rpc("get_all_users_with_credits");
+      if (!error && data) {
+        setUsers(data as UserRow[]);
       }
       setLoading(false);
     };
