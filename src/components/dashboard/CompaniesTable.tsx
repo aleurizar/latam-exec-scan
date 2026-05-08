@@ -8,9 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterState } from "@/pages/Dashboard";
-import { ExternalLink, ListPlus, Lock } from "lucide-react";
+import { ExternalLink, ListPlus, Lock, GitCompare } from "lucide-react";
 import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
+import { CompareCompaniesView } from "./CompareCompaniesView";
 import { useUserPlan } from "@/hooks/useUserPlan";
 
 interface CompaniesTableProps {
@@ -33,6 +34,7 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
   const [pageSize, setPageSize] = useState(25);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAddToList, setShowAddToList] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const { plan } = useUserPlan();
   const isBasic = plan === "basic";
 
@@ -99,6 +101,21 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
           <Badge variant="secondary">{selected.size} seleccionado(s)</Badge>
           <Button size="sm" variant="outline" onClick={() => setShowAddToList(true)}>
             <ListPlus className="w-4 h-4 mr-1" /> Agregar a lista
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={selected.size < 2 || selected.size > 3}
+            onClick={() => setShowCompare(true)}
+            title={
+              selected.size < 2
+                ? "Seleccioná al menos 2 empresas"
+                : selected.size > 3
+                ? "Máximo 3 empresas"
+                : "Comparar"
+            }
+          >
+            <GitCompare className="w-4 h-4 mr-1" /> Comparar
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Deseleccionar</Button>
         </div>
@@ -178,6 +195,12 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
         selectedIds={Array.from(selected)}
         itemType="company"
         onDone={() => setSelected(new Set())}
+      />
+
+      <CompareCompaniesView
+        open={showCompare}
+        onOpenChange={setShowCompare}
+        companyIds={Array.from(selected)}
       />
     </>
   );
