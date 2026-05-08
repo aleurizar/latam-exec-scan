@@ -138,11 +138,8 @@ export const CompareCompaniesView = ({ open, onOpenChange, companyIds }: Compare
 
             {/* Comparison rows */}
             {rows.map((row) => (
-              <>
-                <div
-                  key={`label-${row.label}`}
-                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-3 border-b"
-                >
+              <div key={row.label} className="contents">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-3 border-b">
                   <row.icon className="w-4 h-4" />
                   {row.label}
                 </div>
@@ -154,7 +151,7 @@ export const CompareCompaniesView = ({ open, onOpenChange, companyIds }: Compare
                     {row.render(c)}
                   </div>
                 ))}
-              </>
+              </div>
             ))}
           </div>
         )}

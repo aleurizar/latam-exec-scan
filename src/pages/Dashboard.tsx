@@ -15,7 +15,6 @@ import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
 import { ListsView } from "@/components/dashboard/ListsView";
 import { NotificationsBell } from "@/components/dashboard/NotificationsBell";
-import { CompareCompaniesView } from "@/components/dashboard/CompareCompaniesView";
 
 export interface FilterState {
   country: string[];
