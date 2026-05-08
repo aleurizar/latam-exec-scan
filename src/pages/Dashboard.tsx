@@ -14,6 +14,8 @@ import { AppSidebar, SidebarView } from "@/components/dashboard/AppSidebar";
 import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
 import { ListsView } from "@/components/dashboard/ListsView";
+import { NotificationsBell } from "@/components/dashboard/NotificationsBell";
+import { CompareCompaniesView } from "@/components/dashboard/CompareCompaniesView";
 
 export interface FilterState {
   country: string[];
@@ -108,7 +110,10 @@ const Dashboard = () => {
             <h1 className="text-lg font-bold text-foreground">LATAM Business Data</h1>
             <p className="text-xs text-muted-foreground">Executive Database Platform</p>
           </div>
-          <span className="text-sm text-muted-foreground">{user.email}</span>
+          <div className="flex items-center gap-3">
+            <NotificationsBell />
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
