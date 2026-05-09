@@ -15,6 +15,9 @@ import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
 import { ListsView } from "@/components/dashboard/ListsView";
 import { NotificationsBell } from "@/components/dashboard/NotificationsBell";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 export interface FilterState {
   country: string[];
