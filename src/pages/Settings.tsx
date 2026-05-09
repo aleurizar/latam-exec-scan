@@ -13,6 +13,8 @@ import { AdminUsers } from "@/pages/settings/AdminUsers";
 import { CheckoutSimulado } from "@/pages/settings/CheckoutSimulado";
 import { ImportDialog } from "@/components/dashboard/ImportDialog";
 import { PlanType } from "@/hooks/useUserPlan";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { toast } from "sonner";
 
 type SettingsView = "profile" | "plan" | "upgrade" | "checkout" | "credits" | "notifications" | "security" | "admin-users" | "import";
 
@@ -23,6 +25,7 @@ const Settings = () => {
   const [showImport, setShowImport] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<Exclude<PlanType, "basic"> | null>(null);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string } | null>(null);
+  const { resetTour } = useOnboarding();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -103,6 +106,18 @@ const Settings = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Email</label>
                   <p className="text-foreground">{profile?.email}</p>
+                </div>
+                <div className="pt-4 border-t">
+                  <label className="text-sm font-medium text-muted-foreground block mb-2">Onboarding</label>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      resetTour();
+                      toast.success("Tour reiniciado. Volvé al Dashboard para verlo.");
+                    }}
+                  >
+                    Reiniciar tour guiado
+                  </Button>
                 </div>
               </CardContent>
             </Card>
