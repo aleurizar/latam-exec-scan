@@ -103,10 +103,10 @@ export const OnboardingTour = ({ onNavigate, triggerStartAt }: OnboardingTourPro
     d.drive(startAt);
   };
 
-  // External re-trigger
+  // External re-trigger (any change to a positive value relaunches)
   useEffect(() => {
-    if (triggerStartAt !== undefined && triggerStartAt >= 0) {
-      startTour(triggerStartAt);
+    if (triggerStartAt !== undefined && triggerStartAt > 0) {
+      startTour(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triggerStartAt]);
