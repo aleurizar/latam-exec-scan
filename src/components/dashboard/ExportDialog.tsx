@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { FilterState } from "@/pages/Dashboard";
 import { Download, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface ExportDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ const PLAN_LIMITS: Record<string, number> = {
 };
 
 export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDialogProps) => {
+  const { markTask } = useOnboarding();
   const [format, setFormat] = useState<"csv" | "xlsx">("csv");
   const [loading, setLoading] = useState(false);
   const [quota, setQuota] = useState({ used: 0, limit: 500, plan: "basic" });
@@ -116,6 +118,7 @@ export const ExportDialog = ({ open, onOpenChange, dataType, filters }: ExportDi
     }
 
     toast.success(`Export started! Format: ${format.toUpperCase()}`);
+    markTask("export");
     onOpenChange(false);
   };
 

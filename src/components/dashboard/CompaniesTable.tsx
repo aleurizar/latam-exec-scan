@@ -13,6 +13,7 @@ import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
 import { CompareCompaniesView } from "./CompareCompaniesView";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface CompaniesTableProps {
   filters: FilterState;
@@ -36,6 +37,7 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
   const [showAddToList, setShowAddToList] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const { plan } = useUserPlan();
+  const { markTask } = useOnboarding();
   const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
@@ -106,7 +108,7 @@ export const CompaniesTable = ({ filters, onSelectCompany }: CompaniesTableProps
             size="sm"
             variant="outline"
             disabled={selected.size < 2 || selected.size > 3}
-            onClick={() => setShowCompare(true)}
+            onClick={() => { setShowCompare(true); markTask("compare"); }}
             title={
               selected.size < 2
                 ? "Seleccioná al menos 2 empresas"

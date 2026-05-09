@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface AddToListDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ interface ListOption {
 }
 
 export const AddToListDialog = ({ open, onOpenChange, selectedIds, itemType, onDone }: AddToListDialogProps) => {
+  const { markTask } = useOnboarding();
   const [lists, setLists] = useState<ListOption[]>([]);
   const [selectedList, setSelectedList] = useState<string>("");
   const [newListName, setNewListName] = useState("");
@@ -90,6 +92,7 @@ export const AddToListDialog = ({ open, onOpenChange, selectedIds, itemType, onD
     }
 
     toast.success(`${selectedIds.length} elemento(s) agregado(s) a la lista`);
+    markTask("list");
     onOpenChange(false);
     onDone?.();
   };

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { FilterState } from "@/pages/Dashboard";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface DataFiltersProps {
   filters: FilterState;
@@ -15,13 +16,15 @@ const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Manufacturing", "Ret
 const SIZES = ["1-50", "51-200", "201-1000", "1000+"];
 
 export const DataFilters = ({ filters, onFiltersChange }: DataFiltersProps) => {
+  const { markTask } = useOnboarding();
   const toggleFilter = (category: keyof FilterState, value: string) => {
     const current = filters[category] as string[];
     const updated = current.includes(value)
       ? current.filter(v => v !== value)
       : [...current, value];
-    
+
     onFiltersChange({ ...filters, [category]: updated });
+    markTask("filter");
   };
 
   const removeFilter = (category: keyof FilterState, value: string) => {
