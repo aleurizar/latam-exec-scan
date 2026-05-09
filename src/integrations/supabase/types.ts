@@ -365,6 +365,41 @@ export type Database = {
           },
         ]
       }
+      user_onboarding: {
+        Row: {
+          tasks: Json
+          tour_completed: boolean
+          tour_skipped: boolean
+          updated_at: string
+          user_id: string
+          widget_dismissed: boolean
+        }
+        Insert: {
+          tasks?: Json
+          tour_completed?: boolean
+          tour_skipped?: boolean
+          updated_at?: string
+          user_id: string
+          widget_dismissed?: boolean
+        }
+        Update: {
+          tasks?: Json
+          tour_completed?: boolean
+          tour_skipped?: boolean
+          updated_at?: string
+          user_id?: string
+          widget_dismissed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
