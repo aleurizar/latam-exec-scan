@@ -13,6 +13,7 @@ import { TablePagination } from "./TablePagination";
 import { AddToListDialog } from "./AddToListDialog";
 import { useEmailCredits } from "@/hooks/useEmailCredits";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface ExecutivesTableProps {
   filters: FilterState;
@@ -45,6 +46,7 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
   const [showAddToList, setShowAddToList] = useState(false);
   const [revealingId, setRevealingId] = useState<string | null>(null);
   const { plan } = useUserPlan();
+  const { markTask } = useOnboarding();
   const isBasic = plan === "basic";
 
   useEffect(() => { setPage(0); }, [filters]);
@@ -79,6 +81,7 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
     setRevealingId(execId);
     await revealEmail(execId);
     setRevealingId(null);
+    markTask("reveal");
   };
 
   const toggleSelect = (id: string) => {

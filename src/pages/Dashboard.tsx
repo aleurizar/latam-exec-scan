@@ -15,6 +15,9 @@ import { DetailPanel } from "@/components/dashboard/DetailPanel";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
 import { ListsView } from "@/components/dashboard/ListsView";
 import { NotificationsBell } from "@/components/dashboard/NotificationsBell";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 export interface FilterState {
   country: string[];
@@ -39,6 +42,8 @@ const Dashboard = () => {
   });
   const [detailType, setDetailType] = useState<"company" | "executive" | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [tourTrigger, setTourTrigger] = useState<number>(-1);
+  const { markTask } = useOnboarding();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -109,7 +114,7 @@ const Dashboard = () => {
             <h1 className="text-lg font-bold text-foreground">LATAM Business Data</h1>
             <p className="text-xs text-muted-foreground">Executive Database Platform</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" data-tour="notifications-bell">
             <NotificationsBell />
             <span className="text-sm text-muted-foreground">{user.email}</span>
           </div>
@@ -122,12 +127,12 @@ const Dashboard = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground">Empresas</h2>
-                <div className="relative w-72">
+                <div className="relative w-72" data-tour="search-input">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar empresas..."
                     value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    onChange={(e) => { setFilters({ ...filters, search: e.target.value }); if (e.target.value) markTask("search"); }}
                     className="pl-9 pr-9"
                   />
                   {filters.search && (
@@ -149,12 +154,12 @@ const Dashboard = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground">Ejecutivos</h2>
-                <div className="relative w-72">
+                <div className="relative w-72" data-tour="search-input">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar ejecutivos..."
                     value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    onChange={(e) => { setFilters({ ...filters, search: e.target.value }); if (e.target.value) markTask("search"); }}
                     className="pl-9 pr-9"
                   />
                   {filters.search && (
@@ -192,6 +197,12 @@ const Dashboard = () => {
         filters={filters}
       />
 
+
+      <OnboardingTour
+        onNavigate={(v) => { setActiveView(v as SidebarView); closeDetail(); }}
+        triggerStartAt={tourTrigger}
+      />
+      <OnboardingChecklist onReplayTour={() => setTourTrigger(Date.now())} />
     </div>
   );
 };

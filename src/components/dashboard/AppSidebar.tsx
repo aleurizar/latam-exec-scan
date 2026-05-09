@@ -29,6 +29,7 @@ interface SidebarItem {
   action: () => void;
   active?: boolean;
   submenu?: { label: string; action: () => void }[];
+  dataTour?: string;
 }
 
 export const AppSidebar = ({
@@ -47,12 +48,14 @@ export const AppSidebar = ({
       label: "Dashboard",
       action: () => onViewChange("home"),
       active: activeView === "home",
+      dataTour: "sidebar-home",
     },
     {
       icon: Building2,
       label: "Empresas",
       action: () => onViewChange("companies"),
       active: activeView === "companies",
+      dataTour: "sidebar-companies",
       submenu: [
         { label: "Ver Empresas", action: () => onViewChange("companies") },
         { label: "Exportar", action: onExport },
@@ -63,6 +66,7 @@ export const AppSidebar = ({
       label: "Ejecutivos",
       action: () => onViewChange("executives"),
       active: activeView === "executives",
+      dataTour: "sidebar-executives",
       submenu: [
         { label: "Ver Ejecutivos", action: () => onViewChange("executives") },
         { label: "Exportar", action: onExport },
@@ -73,6 +77,7 @@ export const AppSidebar = ({
       label: "Listas",
       action: () => onViewChange("lists"),
       active: activeView === "lists",
+      dataTour: "sidebar-lists",
       submenu: [
         { label: "Ver Listas", action: () => onViewChange("lists") },
         { label: "Empresas", action: () => onViewChange("companies") },
@@ -83,16 +88,19 @@ export const AppSidebar = ({
       icon: Filter,
       label: "Filtros",
       action: onToggleFilters,
+      dataTour: "sidebar-filters",
     },
     {
       icon: Download,
       label: "Exportar",
       action: onExport,
+      dataTour: "sidebar-export",
     },
     {
       icon: Settings,
       label: "Settings",
       action: () => navigate("/settings"),
+      dataTour: "sidebar-settings",
     },
   ];
 
@@ -112,6 +120,7 @@ export const AppSidebar = ({
           >
             <button
               onClick={item.action}
+              data-tour={item.dataTour}
               className={cn(
                 "w-full flex items-center justify-center py-3 transition-colors",
                 item.active
