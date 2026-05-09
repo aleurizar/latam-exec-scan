@@ -42,6 +42,8 @@ const Dashboard = () => {
   });
   const [detailType, setDetailType] = useState<"company" | "executive" | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [tourTrigger, setTourTrigger] = useState<number>(-1);
+  const { markTask } = useOnboarding();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
