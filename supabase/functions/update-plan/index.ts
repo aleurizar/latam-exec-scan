@@ -42,10 +42,26 @@ Deno.serve(async (req) => {
 
     // Use service role to bypass RLS plan restriction
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Capture previous plan for analytics
+    const { data: prev } = await adminClient
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .single();
+
     const { error } = await adminClient
       .from("profiles")
       .update({ plan })
       .eq("id", user.id);
+
+    if (!error && prev?.plan !== plan) {
+      await adminClient.from("plan_changes").insert({
+        user_id: user.id,
+        from_plan: prev?.plan ?? null,
+        to_plan: plan,
+      });
+    }
 
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {

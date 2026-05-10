@@ -1,58 +1,110 @@
-# Onboarding guiado dentro de la app
+# Plan: Admin Analytics
 
-Combina un **tour interactivo** (spotlight sobre elementos reales de la UI) con un **checklist persistente** que mide progreso real. Se dispara automáticamente la primera vez y queda disponible bajo demanda desde un botón flotante de ayuda.
+Panel dedicado en `/admin/analytics`, accesible solo a admins, con KPIs + gráficos + tabla detallada, filtros por rango custom y comparación contra el período previo.
 
-## Experiencia de usuario
+## 1. Acceso y navegación
 
-1. Primer login → modal de bienvenida ("Te muestro la plataforma en 60 segundos") con botones **Empezar tour** / **Saltar**.
-2. **Tour interactivo** (8 pasos) que resalta elementos reales con overlay oscuro + tooltip:
-   1. Sidebar → Dashboard (vista resumen)
-   2. Sidebar → Empresas (acceso a la base)
-   3. Buscador + botón filtros avanzados
-   4. Selección múltiple → botón **Comparar** (2-3 empresas)
-   5. Botón **Agregar a lista** + sección **Listas** del sidebar
-   6. Fila de ejecutivo → botón **Revelar email** (explica que consume 1 crédito)
-   7. Botón **Exportar** (CSV)
-   8. Campana de **Notificaciones** + acceso a **Configuración / Plan**
-3. **Checklist persistente** (botón flotante 🎯 abajo a la derecha, siempre disponible) con tareas que se chequean automáticamente al ejecutarlas:
-   - [ ] Hacer tu primera búsqueda
-   - [ ] Aplicar un filtro avanzado
-   - [ ] Comparar 2 empresas
-   - [ ] Crear tu primera lista
-   - [ ] Revelar el email de un ejecutivo
-   - [ ] Exportar resultados
-   
-   Barra de progreso (X/6). Al completar todo → toast de felicitaciones + opción de ocultar el widget.
-4. Estado guardado por usuario en la base, sincronizado entre dispositivos. Botón **"Ver tour de nuevo"** en Configuración.
+- Nueva ruta `/admin/analytics` registrada en `App.tsx`, protegida: redirige si `has_role(uid,'admin')` es false.
+- Link "Analytics" en `AppSidebar.tsx` visible solo para admins (junto a Settings).
+- Layout propio: header con título, selector de rango y botón "Exportar CSV".
 
-## Detalles técnicos
+## 2. Controles de tiempo
 
-**Librería**: `driver.js` (ligera, ~10KB, sin deps, soporta spotlight + tooltips estilizables con tokens del design system). Alternativa considerada: `react-joyride` (más pesada).
+- Rangos rápidos: 7d / 30d / 90d / Todo.
+- Date range picker custom (shadcn Calendar `mode="range"` en Popover, con `pointer-events-auto`).
+- Toggle "Comparar con período anterior" → calcula delta % vs ventana de igual duración inmediatamente previa, mostrado en cada KPI con flecha ↑/↓ verde/rojo.
 
-**Base de datos** (1 migración):
-- Tabla `user_onboarding`: `user_id` (PK, FK profiles), `tour_completed` bool, `tour_skipped` bool, `tasks` jsonb (mapa `{ search:true, filter:false, ... }`), `widget_dismissed` bool, `updated_at`.
-- RLS: cada usuario lee/escribe solo su fila. Trigger `handle_new_user` extendido para crear la fila al alta (o upsert lazy en frontend).
+## 3. Métricas (todas las áreas)
 
-**Frontend**:
-- `src/hooks/useOnboarding.ts`: lee/escribe `user_onboarding` con TanStack Query, expone `tasks`, `markTask(key)`, `completeTour()`, `skipTour()`, `resetTour()`.
-- `src/components/onboarding/OnboardingTour.tsx`: configura los 8 pasos de driver.js apuntando a selectores `data-tour="..."` en la UI real. Se monta en `Dashboard.tsx` y se auto-arranca si `!tour_completed && !tour_skipped`.
-- `src/components/onboarding/OnboardingChecklist.tsx`: botón flotante (FAB) + popover con la lista, progreso y CTA "Reanudar tour".
-- `src/components/onboarding/WelcomeDialog.tsx`: modal inicial.
-- Atributos `data-tour` agregados (sin cambios de lógica) en: `AppSidebar`, `CompaniesTable` (toolbar comparar/exportar/agregar a lista), `DataFilters` toggle, `ExecutivesTable` (botón revelar), `NotificationsBell`.
-- Disparadores de `markTask` integrados en handlers existentes:
-  - `search` → al tipear en el buscador del Dashboard
-  - `filter` → al aplicar filtro en `DataFilters`
-  - `compare` → al abrir `CompareCompaniesView`
-  - `list` → al crear lista en `ListsView` / `AddToListDialog`
-  - `reveal` → al confirmar reveal en `ExecutivesTable` / `DetailPanel`
-  - `export` → al confirmar export en `ExportDialog`
-- Entrada en `Settings`: link "Reiniciar tour de onboarding".
+**Uso de plataforma**
+- DAU / WAU / MAU (usuarios únicos con actividad: login, búsqueda, reveal, export).
+- Logins totales, sesiones, retención semanal (cohort simple W1/W2/W4).
 
-**i18n**: textos en español (consistente con el resto). Estructurados como constantes para futura traducción a EN/PT.
+**Consumo de créditos / revelados**
+- Emails revelados totales en período.
+- Distribución por plan (basic/silver/gold).
+- Top 10 usuarios por revelados.
+- Créditos restantes agregados por plan.
 
-**Estilo**: tooltips con tokens semánticos (`bg-card`, `text-foreground`, `border-border`, `shadow-elegant`). Sin colores hardcodeados.
+**Búsquedas y filtros**
+- Búsquedas totales, filtros más usados, países/industrias top.
+- (Requiere log de búsquedas — ver §5.)
 
-## Fuera de alcance (para una iteración futura)
-- Onboarding del flujo admin (Importar datos, Gestionar usuarios).
-- Tour del flujo de upgrade de plan / checkout.
-- Tutoriales en video embebidos.
+**Negocio y planes**
+- Distribución de usuarios por plan (donut).
+- Upgrades en período (transiciones de plan).
+- Exportaciones totales y registros exportados.
+- Listas creadas y items agregados.
+
+## 4. Layout (KPIs + gráficos + tabla)
+
+```text
+┌─ Header: título · rango · comparar · export CSV ─┐
+├─ KPI cards (6): DAU, MAU, Revelados, Exports,    │
+│   Upgrades, Listas — c/u con delta vs prev.      │
+├─ Gráficos:                                        │
+│   · Línea: actividad diaria (revelados/exports)  │
+│   · Barras: revelados por plan                   │
+│   · Donut: usuarios por plan                     │
+│   · Línea: nuevos signups por día                │
+├─ Tabla detallada con tabs:                       │
+│   [Top usuarios] [Búsquedas top] [Eventos]       │
+│   filtros propios + paginación + export CSV      │
+└──────────────────────────────────────────────────┘
+```
+
+Recharts para todos los gráficos, design tokens (HSL del index.css), responsive grid.
+
+## 5. Backend (DB + funciones)
+
+**Nueva tabla `analytics_events`** (para login, search, filter_apply — eventos que hoy no se persisten):
+- `user_id`, `event_type` (text), `payload` (jsonb), `created_at`.
+- RLS: insert por usuarios autenticados (sólo su `user_id`); select sólo admins (`has_role`).
+- Índices en `(event_type, created_at)` y `(user_id, created_at)`.
+
+**Tabla `plan_changes`** para trackear upgrades:
+- `user_id`, `from_plan`, `to_plan`, `created_at`. Insert desde edge function `update-plan` existente.
+
+**Función security definer `admin_analytics_summary(_from timestamptz, _to timestamptz)`**: devuelve jsonb con todos los KPIs agregados en una llamada (DAU, MAU, revelados, exports, upgrades, listas, distrib. por plan). Verifica `has_role(auth.uid(),'admin')` y lanza si no.
+
+**Función `admin_analytics_timeseries(_from, _to, _bucket text)`**: serie diaria/semanal de revelados, exports, signups, logins.
+
+**Función `admin_analytics_top_users(_from, _to, _limit int)`**: top usuarios por revelados/exports.
+
+Todas con `set search_path = public` y `security definer`.
+
+## 6. Frontend
+
+Archivos nuevos:
+- `src/pages/admin/AdminAnalytics.tsx` — página completa.
+- `src/components/admin/analytics/KpiCard.tsx` — card reusable con delta.
+- `src/components/admin/analytics/DateRangeControl.tsx` — selector con presets + custom + toggle compare.
+- `src/components/admin/analytics/ActivityChart.tsx`, `PlanDistributionChart.tsx`, `RevealsByPlanChart.tsx`, `SignupsChart.tsx`.
+- `src/components/admin/analytics/TopUsersTable.tsx`, `SearchesTable.tsx`, `EventsTable.tsx` (tabs).
+- `src/hooks/useAdminAnalytics.ts` — TanStack Query hooks que llaman las RPC con `{from,to}` y `{compareFrom,compareTo}`.
+- `src/lib/analyticsCsv.ts` — export CSV de la vista actual.
+
+Archivos editados:
+- `src/App.tsx` — ruta `/admin/analytics` con guard admin.
+- `src/components/dashboard/AppSidebar.tsx` — entrada "Analytics" para admins.
+- Instrumentación mínima en `Auth.tsx` (login event), `DataFilters.tsx` (search event) → insert en `analytics_events`.
+
+## 7. Performance
+
+- Las RPC agregan en SQL (no traer filas crudas). Indexar `email_reveals.created_at`, `export_logs.created_at`, `lists.created_at`, `analytics_events(event_type,created_at)`.
+- TanStack Query con `staleTime` 60s, key incluye rango.
+- Para "Todo el tiempo" en datasets grandes, capear a últimos 365 días con aviso.
+
+## 8. Fuera de alcance
+
+- Funnels avanzados, segmentación multi-dimensión, A/B testing.
+- Alertas/emails automáticos de métricas.
+- Dashboards configurables por el usuario.
+
+## Flujo de implementación
+
+1. Migración: `analytics_events`, `plan_changes`, índices, 3 funciones RPC, RLS.
+2. Hook `useAdminAnalytics` + página `/admin/analytics` con KPIs + gráficos.
+3. Tabs de tabla (top users, eventos) + export CSV.
+4. Instrumentación de login/search.
+5. Link en sidebar + guard de ruta.
