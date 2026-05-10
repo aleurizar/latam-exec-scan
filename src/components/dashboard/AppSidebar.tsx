@@ -114,6 +114,12 @@ export const AppSidebar = ({
       action: () => navigate("/settings"),
       dataTour: "sidebar-settings",
     },
+    ...(isAdmin ? [{
+      icon: BarChart3,
+      label: "Analytics",
+      action: () => navigate("/admin/analytics"),
+      dataTour: "sidebar-analytics",
+    }] : []),
   ];
 
   return (
