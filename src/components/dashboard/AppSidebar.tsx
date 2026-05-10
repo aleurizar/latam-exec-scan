@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -10,8 +10,10 @@ import {
   Database,
   List,
   Settings,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export type SidebarView = "home" | "companies" | "executives" | "lists";
 
@@ -41,6 +43,16 @@ export const AppSidebar = ({
 }: AppSidebarProps) => {
   const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      setIsAdmin(data?.some((r) => r.role === "admin") ?? false);
+    })();
+  }, []);
 
   const items: SidebarItem[] = [
     {
