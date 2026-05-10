@@ -19,6 +19,14 @@ const Auth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
+        if (event === "SIGNED_IN") {
+          // log analytics event (fire & forget)
+          supabase.from("analytics_events").insert([{
+            user_id: session.user.id,
+            event_type: "login",
+            payload: {} as never,
+          }]).then(() => {});
+        }
         navigate("/dashboard");
       }
     });
