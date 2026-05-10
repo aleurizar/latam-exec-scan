@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { FilterState } from "@/pages/Dashboard";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { logAnalyticsEvent } from "@/hooks/useAdminAnalytics";
 
 interface DataFiltersProps {
   filters: FilterState;
@@ -25,6 +26,7 @@ export const DataFilters = ({ filters, onFiltersChange }: DataFiltersProps) => {
 
     onFiltersChange({ ...filters, [category]: updated });
     markTask("filter");
+    logAnalyticsEvent("search", { category, value });
   };
 
   const removeFilter = (category: keyof FilterState, value: string) => {
