@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           country: string
@@ -300,6 +324,30 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_changes: {
+        Row: {
+          created_at: string
+          from_plan: string | null
+          id: string
+          to_plan: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_plan?: string | null
+          id?: string
+          to_plan: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_plan?: string | null
+          id?: string
+          to_plan?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
@@ -434,6 +482,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_analytics_summary: {
+        Args: { _from: string; _to: string }
+        Returns: Json
+      }
+      admin_analytics_timeseries: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          day: string
+          exports: number
+          logins: number
+          reveals: number
+          searches: number
+          signups: number
+        }[]
+      }
+      admin_analytics_top_users: {
+        Args: { _from: string; _limit?: number; _to: string }
+        Returns: {
+          email: string
+          exports: number
+          full_name: string
+          plan: string
+          reveals: number
+          user_id: string
+        }[]
+      }
       get_all_users_with_credits: {
         Args: never
         Returns: {
