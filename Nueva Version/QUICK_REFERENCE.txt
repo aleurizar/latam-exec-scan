@@ -1,0 +1,213 @@
+# ⚡ QUICK REFERENCE CARD
+## Motor de Calificación v1 - Foxie Project
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 📊 FÓRMULAS DE SCORING
+
+#### EMPRESA
+```
+SCORE_FINAL = (Relevancia × 0.35) + (Confianza × 0.30) + (Contactabilidad × 0.35)
+
+Relevancia = (Ventas_Totales × 0.60) + (MercadoLider × 0.40)
+Confianza = (Website × 0.35) + (LinkedIn × 0.25) + (Email × 0.25) + (DataMatch × 0.15)
+Contactabilidad = (Email × 0.35) + (Phone × 0.25) + (WhatsApp × 0.25) + (Redes × 0.15)
+```
+
+#### CONTACTO
+```
+SCORE_FINAL = (Seniority × 0.40) + (RelevanciaRol × 0.35) + (Contactabilidad × 0.25)
+
+Seniority: C-level=100 | Director=90 | Manager=75 | Specialist=60 | Other=40
+RelevanciaRol: CEO/Founder=100 | Ecom Manager=95 | Ops=80 | ICP=60 | Other=40
+Contactabilidad = email_verified + phone + whatsapp + linkedin
+```
+
+#### OUTREACH FINAL
+```
+SCORE_FINAL_OUTREACH = (ContactoScore × 0.60) + (EmpresaScore × 0.40)
+
+Ready to Outreach? = (clasificacion == 'ALTO' OR clasificacion == 'MEDIO')
+Canal Recomendado = email_verificado > whatsapp > linkedin > phone
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🚨 GATES (Reglas Bloqueantes)
+
+| Gate ID | Condición | Max Clasificación | Severidad |
+|---------|-----------|-------------------|-----------|
+| GATE_NO_CANALES | email_corp = NULL AND phone = NULL AND whatsapp = NULL | BAJO | Bloqueante |
+| GATE_BAJA_RELEVANCIA | score_relevancia < 30 | BAJO | Media |
+| GATE_CONTACTABILIDAD_BAJA | score_contactabilidad < 60 AND score_final >= 80 | MEDIO | Media |
+
+**Cómo aplican:**
+1. Se calculan scores dimensionales
+2. Se aplican gates
+3. Si gate aplica → baja clasificación final
+4. Luego se asigna al rango (ALTO/MEDIO/BAJO/BÁSICO)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 📊 UMBRALES DE CLASIFICACIÓN
+
+| Clasificación | Rango | Color |
+|---------------|-------|-------|
+| ALTO | 80-100 | 🟢 Verde |
+| MEDIO | 60-79 | 🟡 Amarillo |
+| BAJO | 40-59 | 🟠 Naranja |
+| BÁSICO | 0-39 | ⚪ Gris |
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🛠️ COMPONENTES REACT (Copiar a VS Code)
+
+```
+src/
+├── components/
+│   ├── admin/
+│   │   └── ScoringAdminPanel.tsx
+│   └── commercial/
+│       └── ScoringCommercialPanel.tsx
+└── pages/
+    └── ScoringDashboard.tsx
+```
+
+**Admin Panel (5 tabs):**
+1. Pesos - Sliders para ajustar dimensiones
+2. Gates - Habilitar/deshabilitar reglas
+3. Umbrales - View read-only
+4. Simulación - Upload CSV, ejecutar sin persistencia
+5. Historial - Versionado, comparar, restaurar
+
+**Commercial Panel (3 tabs):**
+1. Registro Final - Tabla outreach + estadísticas
+2. Scores Empresa - Desglose dimensional + gráficos
+3. Scores Contacto - Desglose dimensional + gráficos
+
+**Dashboard Principal:**
+- Header con status del motor
+- Stats en tiempo real
+- Router → Admin / Commercial / Logs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🗄️ TABLAS SUPABASE (YA CREADAS)
+
+```sql
+config_motor
+├── id BIGINT (PK)
+├── version_number INT
+├── motor_type VARCHAR
+├── config_json JSONB (pesos, gates, umbrales)
+├── is_active BOOLEAN
+└── created_by UUID
+
+empresa_scores
+├── id UUID (PK)
+├── empresa_id UUID (FK → companies.id)
+├── config_motor_id INT (FK)
+├── scores JSONB (relevancia, confianza, contactabilidad, final)
+├── clasificacion VARCHAR (ALTO/MEDIO/BAJO/BÁSICO)
+├── gates_applied JSONB (qué gates aplicaron)
+└── reasoning_json JSONB (explicación)
+
+contacto_scores
+├── id UUID (PK)
+├── contacto_id UUID (FK → executives.id)
+├── empresa_id UUID (FK)
+├── scores JSONB (seniority, relevancia_rol, contactabilidad, final)
+├── clasificacion VARCHAR
+└── gates_applied JSONB
+
+registro_final_outreach
+├── id UUID (PK)
+├── empresa_id UUID
+├── contacto_id_primario UUID
+├── score_final_outreach NUMERIC
+├── ready_to_outreach BOOLEAN
+├── priority_rank INT
+├── canal_recomendado VARCHAR (email/whatsapp/linkedin/phone)
+├── prepared_for_crm BOOLEAN
+└── timestamp TIMESTAMPTZ
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🔧 COMANDOS ÚTILES
+
+```bash
+# Copiar componentes (PowerShell)
+mkdir src\components\admin -Force
+mkdir src\components\commercial -Force
+mkdir src\pages -Force
+
+# Instalar componentes UI faltantes
+npx shadcn-ui@latest add card
+npx shadcn-ui@latest add tabs
+npx shadcn-ui@latest add slider
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add input
+npx shadcn-ui@latest add label
+npx shadcn-ui@latest add checkbox
+npx shadcn-ui@latest add textarea
+npx shadcn-ui@latest add badge
+npx shadcn-ui@latest add table
+npx shadcn-ui@latest add select
+
+# Build
+npm run build
+
+# Dev
+npm run dev
+
+# Navegar a
+http://localhost:5173/scoring
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### ✅ CHECKLIST ANTES DE FASE 1
+
+- [ ] Descargué 3 .tsx de /mnt/user-data/outputs/
+- [ ] Creé carpetas: admin/, commercial/, pages/
+- [ ] Copié archivos a sus ubicaciones
+- [ ] Instalé componentes shadcn/ui faltantes
+- [ ] Verificar que scoring.types.ts exista
+- [ ] npm run build → SIN ERRORES
+- [ ] npm run dev → carga en http://localhost:5173
+- [ ] Admin Panel muestra 5 tabs
+- [ ] Commercial Panel muestra 3 tabs
+- [ ] Dashboard carga sin errores
+- [ ] Validé pesos/gates/umbrales con Matias
+- [ ] Iniciar FASE 1: Integración Supabase
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 📞 CONTACTOS
+
+- **Matias Poggio** (cliente) - Validar pesos/gates
+- **Jean Paul Paez** (tech) - Integración HubSpot
+- **Alejandro** (ops) - Ejecución
+
+### 📚 DOCUMENTACIÓN CLAVE
+
+- **00_INDICE_MAESTRO.md** ⭐ EMPEZÁ AQUÍ
+- **CHECKLIST_COPIAR_PANELS.md** - Paso a paso
+- **RESUMEN_EJECUTIVO_MOTOR_COMPLETO.md** - Overview completo
+- **VISUAL_ENTREGABLES_COMPONENTS.md** - Diagramas ASCII
+
+### 🎯 ROADMAP
+
+**COMPLETADO:** SQL + TypeScript + UI Components  
+**FASE 1:** Conectar a Supabase (próximos 3-4 horas)  
+**FASE 2:** Integración HubSpot (próxima semana)  
+**FASE 3:** Simulación Real (semana siguiente)  
+**FASE 4:** Auditoría Completa (después)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Status:** 🟢 LISTO PARA INTEGRACIÓN
+
+**Última actualización:** 8 junio 2026, 16:45 UTC-3  
+**Generado por:** Claude | Proyecto Foxie - Latamdata
