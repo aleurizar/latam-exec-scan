@@ -87,11 +87,11 @@ export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps)
 
   const fetchExecutive = async (execId: string) => {
     const { data } = await supabase
-      .from("executives")
-      .select("*, companies(id, name, industry, country, website)")
+      .from("executives_secure")
+      .select("id, full_name, position, seniority, country, technologies, email, linkedin_url, email_masked, has_email, has_linkedin, companies(id, name, industry, country, website)")
       .eq("id", execId)
       .single();
-    setExecutive(data as Executive);
+    setExecutive(data as unknown as Executive);
     setCompany(null);
     setCompanyExecs([]);
     setLoading(false);
