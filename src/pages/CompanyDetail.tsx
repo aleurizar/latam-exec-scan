@@ -25,8 +25,7 @@ interface Executive {
   full_name: string;
   position: string;
   seniority: string | null;
-  email: string | null;
-  linkedin_url: string | null;
+  has_linkedin: boolean;
   country: string;
 }
 
