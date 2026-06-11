@@ -60,6 +60,11 @@ export interface PesosConfig {
       whatsapp: number;
       rrss: number;
     };
+    contacto?: {
+      seniority: number;
+      relevancia_rol: number;
+      contactabilidad: number;
+    };
   };
 }
 
