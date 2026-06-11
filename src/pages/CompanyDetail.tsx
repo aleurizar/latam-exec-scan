@@ -61,12 +61,12 @@ const CompanyDetail = () => {
 
   const fetchExecutives = async () => {
     const { data } = await supabase
-      .from("executives")
-      .select("id, full_name, position, seniority, email, linkedin_url, country")
+      .from("executives_secure")
+      .select("id, full_name, position, seniority, has_linkedin, country")
       .eq("company_id", id!)
       .order("full_name");
 
-    if (data) setExecutives(data);
+    if (data) setExecutives(data as unknown as Executive[]);
   };
 
   const formatRevenue = (revenue: number | null) => {
