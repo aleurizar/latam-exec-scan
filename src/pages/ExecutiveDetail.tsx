@@ -14,6 +14,9 @@ interface Executive {
   position: string;
   seniority: string | null;
   email: string | null;
+  email_masked: string | null;
+  has_email: boolean;
+  has_linkedin: boolean;
   linkedin_url: string | null;
   country: string;
   technologies: string[] | null;
@@ -26,18 +29,12 @@ interface Executive {
   } | null;
 }
 
-const maskEmail = (email: string) => {
-  const [local, domain] = email.split("@");
-  if (!domain) return "***@***.com";
-  return `${local[0]}***@${domain}`;
-};
-
 const ExecutiveDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [executive, setExecutive] = useState<Executive | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
+  const { isRevealed, revealEmail, canRevealEmail, getRevealedContact } = useEmailCredits();
   const [revealingEmail, setRevealingEmail] = useState(false);
 
   useEffect(() => {
@@ -46,8 +43,8 @@ const ExecutiveDetail = () => {
 
   const fetchExecutive = async () => {
     const { data, error } = await supabase
-      .from("executives")
-      .select("*, companies(id, name, industry, country, website)")
+      .from("executives_secure")
+      .select("id, full_name, position, seniority, country, technologies, email, linkedin_url, email_masked, has_email, has_linkedin, companies(id, name, industry, country, website)")
       .eq("id", id!)
       .single();
 
@@ -55,7 +52,7 @@ const ExecutiveDetail = () => {
       console.error("Error fetching executive:", error);
       navigate("/dashboard");
     } else {
-      setExecutive(data as Executive);
+      setExecutive(data as unknown as Executive);
     }
     setLoading(false);
   };
