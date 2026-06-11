@@ -54,8 +54,11 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
     staleTime: 60_000,
     queryFn: async () => {
       let query = supabase
-        .from("executives")
-        .select("*, companies(name, industry)", { count: "estimated" })
+        .from("executives_secure")
+        .select(
+          "id, full_name, position, seniority, country, technologies, email, linkedin_url, email_masked, has_email, has_linkedin, companies(name, industry)",
+          { count: "estimated" }
+        )
         .order("full_name");
       if (filters.country.length > 0) query = query.in("country", filters.country);
       if (filters.search) {
@@ -66,7 +69,7 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
       const from = page * pageSize;
       const { data, error, count } = await query.range(from, from + pageSize - 1);
       if (error) throw error;
-      return { rows: (data || []) as Executive[], total: count || 0 };
+      return { rows: (data || []) as unknown as Executive[], total: count || 0 };
     },
   });
 
