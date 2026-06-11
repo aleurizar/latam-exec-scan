@@ -26,20 +26,17 @@ interface Executive {
   position: string;
   seniority: string | null;
   email: string | null;
+  email_masked: string | null;
+  has_email: boolean;
+  has_linkedin: boolean;
   linkedin_url: string | null;
   country: string;
   technologies: string[] | null;
   companies: { name: string; industry: string } | null;
 }
 
-const maskEmail = (email: string) => {
-  const [local, domain] = email.split("@");
-  if (!domain) return "***@***.com";
-  return `${local[0]}***@${domain}`;
-};
-
 export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableProps) => {
-  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
+  const { isRevealed, revealEmail, canRevealEmail, getRevealedContact } = useEmailCredits();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [selected, setSelected] = useState<Set<string>>(new Set());
