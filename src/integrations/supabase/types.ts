@@ -104,6 +104,13 @@ export type Database = {
             referencedRelation: "executives"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "email_reveals_executive_id_fkey"
+            columns: ["executive_id"]
+            isOneToOne: false
+            referencedRelation: "executives_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
       executives: {
@@ -479,7 +486,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      executives_secure: {
+        Row: {
+          company_id: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          email_masked: string | null
+          full_name: string | null
+          has_email: boolean | null
+          has_linkedin: boolean | null
+          id: string | null
+          linkedin_url: string | null
+          position: string | null
+          seniority: string | null
+          technologies: string[] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "executives_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_analytics_summary: {
@@ -519,6 +552,14 @@ export type Database = {
         }[]
       }
       get_email_credit_limit: { Args: { _plan: string }; Returns: number }
+      get_my_revealed_contacts: {
+        Args: never
+        Returns: {
+          email: string
+          executive_id: string
+          linkedin_url: string
+        }[]
+      }
       get_used_credits: { Args: { _user_id: string }; Returns: number }
       get_user_plan: { Args: { _user_id: string }; Returns: string }
       has_role: {
@@ -537,6 +578,13 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      reveal_executive_email: {
+        Args: { _executive_id: string }
+        Returns: {
+          email: string
+          linkedin_url: string
+        }[]
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

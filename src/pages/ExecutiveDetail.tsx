@@ -14,6 +14,9 @@ interface Executive {
   position: string;
   seniority: string | null;
   email: string | null;
+  email_masked: string | null;
+  has_email: boolean;
+  has_linkedin: boolean;
   linkedin_url: string | null;
   country: string;
   technologies: string[] | null;
@@ -26,18 +29,12 @@ interface Executive {
   } | null;
 }
 
-const maskEmail = (email: string) => {
-  const [local, domain] = email.split("@");
-  if (!domain) return "***@***.com";
-  return `${local[0]}***@${domain}`;
-};
-
 const ExecutiveDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [executive, setExecutive] = useState<Executive | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
+  const { isRevealed, revealEmail, canRevealEmail, getRevealedContact } = useEmailCredits();
   const [revealingEmail, setRevealingEmail] = useState(false);
 
   useEffect(() => {
@@ -46,8 +43,8 @@ const ExecutiveDetail = () => {
 
   const fetchExecutive = async () => {
     const { data, error } = await supabase
-      .from("executives")
-      .select("*, companies(id, name, industry, country, website)")
+      .from("executives_secure")
+      .select("id, full_name, position, seniority, country, technologies, email, linkedin_url, email_masked, has_email, has_linkedin, companies(id, name, industry, country, website)")
       .eq("id", id!)
       .single();
 
@@ -55,7 +52,7 @@ const ExecutiveDetail = () => {
       console.error("Error fetching executive:", error);
       navigate("/dashboard");
     } else {
-      setExecutive(data as Executive);
+      setExecutive(data as unknown as Executive);
     }
     setLoading(false);
   };
@@ -112,37 +109,62 @@ const ExecutiveDetail = () => {
                 <Briefcase className="w-4 h-4 text-muted-foreground" />
                 <Badge variant="secondary">{executive.seniority || "N/A"}</Badge>
               </div>
-              {executive.email && (
+              {executive.has_email && (
                 <div className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-muted-foreground" />
-                  {isRevealed(executive.id) ? (
-                    <a href={`mailto:${executive.email}`} className="text-primary hover:underline">
-                      {executive.email}
-                    </a>
-                  ) : (
-                    <span className="text-muted-foreground inline-flex items-center gap-2">
-                      {maskEmail(executive.email)}
+                  {(() => {
+                    const revealedEmail = getRevealedContact(executive.id)?.email ?? executive.email;
+                    return isRevealed(executive.id) && revealedEmail ? (
+                      <a href={`mailto:${revealedEmail}`} className="text-primary hover:underline">
+                        {revealedEmail}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground inline-flex items-center gap-2">
+                        {executive.email_masked}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          disabled={revealingEmail || !canRevealEmail}
+                          onClick={handleRevealEmail}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </span>
+                    );
+                  })()}
+                </div>
+              )}
+              {(() => {
+                const revealedLinkedin = getRevealedContact(executive.id)?.linkedin_url ?? executive.linkedin_url;
+                if (isRevealed(executive.id) && revealedLinkedin) {
+                  return (
+                    <div className="flex items-center gap-3">
+                      <Linkedin className="w-4 h-4 text-muted-foreground" />
+                      <a href={revealedLinkedin} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                        Ver perfil <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  );
+                }
+                if (executive.has_linkedin) {
+                  return (
+                    <div className="flex items-center gap-3">
+                      <Linkedin className="w-4 h-4 text-muted-foreground" />
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
                         disabled={revealingEmail || !canRevealEmail}
                         onClick={handleRevealEmail}
                       >
-                        <Plus className="w-3 h-3" />
+                        Revelar perfil
                       </Button>
-                    </span>
-                  )}
-                </div>
-              )}
-              {executive.linkedin_url && (
-                <div className="flex items-center gap-3">
-                  <Linkedin className="w-4 h-4 text-muted-foreground" />
-                  <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                    Ver perfil <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              )}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </CardContent>
           </Card>
 

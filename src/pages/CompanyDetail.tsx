@@ -25,8 +25,7 @@ interface Executive {
   full_name: string;
   position: string;
   seniority: string | null;
-  email: string | null;
-  linkedin_url: string | null;
+  has_linkedin: boolean;
   country: string;
 }
 
@@ -62,12 +61,12 @@ const CompanyDetail = () => {
 
   const fetchExecutives = async () => {
     const { data } = await supabase
-      .from("executives")
-      .select("id, full_name, position, seniority, email, linkedin_url, country")
+      .from("executives_secure")
+      .select("id, full_name, position, seniority, has_linkedin, country")
       .eq("company_id", id!)
       .order("full_name");
 
-    if (data) setExecutives(data);
+    if (data) setExecutives(data as unknown as Executive[]);
   };
 
   const formatRevenue = (revenue: number | null) => {
@@ -190,10 +189,10 @@ const CompanyDetail = () => {
                       <TableCell>{exec.seniority || "N/A"}</TableCell>
                       <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                       <TableCell>
-                        {exec.linkedin_url ? (
-                          <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                            Profile <ExternalLink className="w-3 h-3" />
-                          </a>
+                        {exec.has_linkedin ? (
+                          <Link to={`/executive/${exec.id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                            Ver perfil <ExternalLink className="w-3 h-3" />
+                          </Link>
                         ) : <span className="text-muted-foreground">N/A</span>}
                       </TableCell>
                     </TableRow>

@@ -26,20 +26,17 @@ interface Executive {
   position: string;
   seniority: string | null;
   email: string | null;
+  email_masked: string | null;
+  has_email: boolean;
+  has_linkedin: boolean;
   linkedin_url: string | null;
   country: string;
   technologies: string[] | null;
   companies: { name: string; industry: string } | null;
 }
 
-const maskEmail = (email: string) => {
-  const [local, domain] = email.split("@");
-  if (!domain) return "***@***.com";
-  return `${local[0]}***@${domain}`;
-};
-
 export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableProps) => {
-  const { isRevealed, revealEmail, canRevealEmail } = useEmailCredits();
+  const { isRevealed, revealEmail, canRevealEmail, getRevealedContact } = useEmailCredits();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -57,8 +54,11 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
     staleTime: 60_000,
     queryFn: async () => {
       let query = supabase
-        .from("executives")
-        .select("*, companies(name, industry)", { count: "estimated" })
+        .from("executives_secure")
+        .select(
+          "id, full_name, position, seniority, country, technologies, email, linkedin_url, email_masked, has_email, has_linkedin, companies(name, industry)",
+          { count: "estimated" }
+        )
         .order("full_name");
       if (filters.country.length > 0) query = query.in("country", filters.country);
       if (filters.search) {
@@ -69,7 +69,7 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
       const from = page * pageSize;
       const { data, error, count } = await query.range(from, from + pageSize - 1);
       if (error) throw error;
-      return { rows: (data || []) as Executive[], total: count || 0 };
+      return { rows: (data || []) as unknown as Executive[], total: count || 0 };
     },
   });
 
@@ -165,25 +165,28 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     </TableCell>
                     <TableCell>{exec.position}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      {exec.email ? (
-                        isRevealed(exec.id) ? (
-                          <a href={`mailto:${exec.email}`} className="text-primary hover:underline text-sm">
-                            {exec.email}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground inline-flex items-center gap-1 text-sm">
-                            {maskEmail(exec.email)}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5"
-                              disabled={revealingId === exec.id || !canRevealEmail}
-                              onClick={(e) => handleReveal(e, exec.id)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </span>
-                        )
+                      {exec.has_email ? (
+                        (() => {
+                          const revealedEmail = getRevealedContact(exec.id)?.email ?? exec.email;
+                          return isRevealed(exec.id) && revealedEmail ? (
+                            <a href={`mailto:${revealedEmail}`} className="text-primary hover:underline text-sm">
+                              {revealedEmail}
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground inline-flex items-center gap-1 text-sm">
+                              {exec.email_masked}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                disabled={revealingId === exec.id || !canRevealEmail}
+                                onClick={(e) => handleReveal(e, exec.id)}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </span>
+                          );
+                        })()
                       ) : (
                         <span className="text-muted-foreground text-sm">N/A</span>
                       )}
@@ -199,15 +202,37 @@ export const ExecutivesTable = ({ filters, onSelectExecutive }: ExecutivesTableP
                     <TableCell><Badge variant="outline">{exec.country}</Badge></TableCell>
                     <TableCell>{exec.seniority || "N/A"}</TableCell>
                     <TableCell>
-                      {isBasic ? (
-                        <span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
-                          <Lock className="w-3 h-3" /> <span className="blur-sm select-none">Profile</span>
-                        </span>
-                      ) : exec.linkedin_url ? (
-                        <a href={exec.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          Profile <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : <span className="text-muted-foreground">N/A</span>}
+                      {(() => {
+                        const revealedLinkedin = getRevealedContact(exec.id)?.linkedin_url ?? exec.linkedin_url;
+                        if (isBasic) {
+                          return (
+                            <span className="inline-flex items-center gap-1 text-muted-foreground text-sm">
+                              <Lock className="w-3 h-3" /> <span className="blur-sm select-none">Profile</span>
+                            </span>
+                          );
+                        }
+                        if (isRevealed(exec.id) && revealedLinkedin) {
+                          return (
+                            <a href={revealedLinkedin} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              Profile <ExternalLink className="w-3 h-3" />
+                            </a>
+                          );
+                        }
+                        if (exec.has_linkedin) {
+                          return (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              disabled={revealingId === exec.id || !canRevealEmail}
+                              onClick={(e) => handleReveal(e, exec.id)}
+                            >
+                              <Lock className="w-3 h-3 mr-1" /> Revelar
+                            </Button>
+                          );
+                        }
+                        return <span className="text-muted-foreground">N/A</span>;
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))
