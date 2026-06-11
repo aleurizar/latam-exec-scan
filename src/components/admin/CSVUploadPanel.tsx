@@ -82,9 +82,9 @@ export function CSVUploadPanel() {
       headers.forEach((header, idx) => {
         const value = values[idx] || '';
         if (header.includes('revenue') || header.includes('sales_total')) {
-          row[header as keyof ParsedRow] = value ? parseInt(value, 10) : undefined;
+          (row as Record<string, unknown>)[header] = value ? parseInt(value, 10) : undefined;
         } else {
-          row[header as keyof ParsedRow] = value || undefined;
+          (row as Record<string, unknown>)[header] = value || undefined;
         }
       });
 
