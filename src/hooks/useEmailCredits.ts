@@ -9,10 +9,15 @@ const PLAN_LIMITS: Record<string, number> = {
   gold: 2000,
 };
 
+interface RevealedContact {
+  email: string | null;
+  linkedin_url: string | null;
+}
+
 export const useEmailCredits = () => {
   const { plan } = useUserPlan();
   const [usedCredits, setUsedCredits] = useState(0);
-  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const [revealedContacts, setRevealedContacts] = useState<Map<string, RevealedContact>>(new Map());
   const [loading, setLoading] = useState(true);
 
   const totalCredits = PLAN_LIMITS[plan] || 100;
@@ -21,15 +26,20 @@ export const useEmailCredits = () => {
 
   const fetchCredits = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    const { data, error } = await supabase
-      .from("email_reveals")
-      .select("executive_id");
+    const { data, error } = await supabase.rpc("get_my_revealed_contacts");
 
     if (!error && data) {
-      setUsedCredits(data.length);
-      setRevealedIds(new Set(data.map((r) => r.executive_id)));
+      const map = new Map<string, RevealedContact>();
+      for (const row of data as { executive_id: string; email: string | null; linkedin_url: string | null }[]) {
+        map.set(row.executive_id, { email: row.email, linkedin_url: row.linkedin_url });
+      }
+      setUsedCredits(map.size);
+      setRevealedContacts(map);
     }
     setLoading(false);
   }, []);
@@ -39,37 +49,43 @@ export const useEmailCredits = () => {
   }, [fetchCredits]);
 
   const revealEmail = useCallback(async (executiveId: string): Promise<boolean> => {
-    if (revealedIds.has(executiveId)) return true;
+    if (revealedContacts.has(executiveId)) return true;
     if (!canRevealEmail) {
       toast.error("Sin créditos disponibles. Actualiza tu plan para desbloquear más emails.");
       return false;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-
-    const { error } = await supabase
-      .from("email_reveals")
-      .insert({ user_id: user.id, executive_id: executiveId });
+    const { data, error } = await supabase.rpc("reveal_executive_email", {
+      _executive_id: executiveId,
+    });
 
     if (error) {
-      if (error.code === "23505") {
-        // Already revealed (unique constraint)
-        setRevealedIds((prev) => new Set(prev).add(executiveId));
-        return true;
+      if (error.message?.includes("credit_limit_reached")) {
+        toast.error("Sin créditos disponibles. Actualiza tu plan para desbloquear más emails.");
+      } else {
+        toast.error("Error al desbloquear email");
       }
-      toast.error("Error al desbloquear email");
       return false;
     }
 
-    setRevealedIds((prev) => new Set(prev).add(executiveId));
+    const contact = (data as RevealedContact[] | null)?.[0] ?? { email: null, linkedin_url: null };
+    setRevealedContacts((prev) => {
+      const next = new Map(prev);
+      next.set(executiveId, contact);
+      return next;
+    });
     setUsedCredits((prev) => prev + 1);
     return true;
-  }, [revealedIds, canRevealEmail]);
+  }, [revealedContacts, canRevealEmail]);
 
   const isRevealed = useCallback(
-    (executiveId: string) => revealedIds.has(executiveId),
-    [revealedIds]
+    (executiveId: string) => revealedContacts.has(executiveId),
+    [revealedContacts]
+  );
+
+  const getRevealedContact = useCallback(
+    (executiveId: string) => revealedContacts.get(executiveId) ?? null,
+    [revealedContacts]
   );
 
   return {
@@ -80,6 +96,7 @@ export const useEmailCredits = () => {
     canRevealEmail,
     revealEmail,
     isRevealed,
+    getRevealedContact,
     loading,
   };
 };
