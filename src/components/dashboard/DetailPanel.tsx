@@ -211,36 +211,61 @@ export const DetailPanel = ({ type, id, onClose, onNavigate }: DetailPanelProps)
                   <Badge variant="secondary">{executive.seniority || "N/A"}</Badge>
                 </div>
                 {/* Email with reveal logic */}
-                {executive.email ? (
+                {executive.has_email ? (
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="w-4 h-4 text-muted-foreground" />
-                    {isRevealed(executive.id) ? (
-                      <a href={`mailto:${executive.email}`} className="text-primary hover:underline">{executive.email}</a>
-                    ) : (
-                      <span className="text-muted-foreground inline-flex items-center gap-1">
-                        {maskEmail(executive.email)}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5"
-                          disabled={revealingEmail || !canRevealEmail}
-                          onClick={handleRevealEmail}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </span>
-                    )}
+                    {(() => {
+                      const revealedEmail = getRevealedContact(executive.id)?.email ?? executive.email;
+                      return isRevealed(executive.id) && revealedEmail ? (
+                        <a href={`mailto:${revealedEmail}`} className="text-primary hover:underline">{revealedEmail}</a>
+                      ) : (
+                        <span className="text-muted-foreground inline-flex items-center gap-1">
+                          {executive.email_masked}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5"
+                            disabled={revealingEmail || !canRevealEmail}
+                            onClick={handleRevealEmail}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </span>
+                      );
+                    })()}
                   </div>
                 ) : null}
                 {/* LinkedIn */}
-                {executive.linkedin_url && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Linkedin className="w-4 h-4 text-muted-foreground" />
-                    <a href={executive.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                      Ver perfil <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                )}
+                {(() => {
+                  const revealedLinkedin = getRevealedContact(executive.id)?.linkedin_url ?? executive.linkedin_url;
+                  if (isRevealed(executive.id) && revealedLinkedin) {
+                    return (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Linkedin className="w-4 h-4 text-muted-foreground" />
+                        <a href={revealedLinkedin} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                          Ver perfil <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    );
+                  }
+                  if (executive.has_linkedin) {
+                    return (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Linkedin className="w-4 h-4 text-muted-foreground" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          disabled={revealingEmail || !canRevealEmail}
+                          onClick={handleRevealEmail}
+                        >
+                          Revelar perfil
+                        </Button>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {executive.companies && (
