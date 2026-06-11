@@ -9,7 +9,7 @@ import {
   ConfigMotorJSON, 
   ReasoningEmpresa,
   EmpresaScores 
-} from '@/types/scoring';
+} from './types';
 
 /**
  * Calcula Score de Relevancia de la empresa
